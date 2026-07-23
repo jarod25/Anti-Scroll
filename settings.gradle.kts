@@ -24,3 +24,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Anti-Scroll"
 include(":app")
+include(":data")
+include(":domain")
+include(":engine")
+include(":monitoring")
