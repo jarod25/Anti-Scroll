@@ -36,26 +36,28 @@ The complete product specification is maintained in the project's requirements d
 - Gradle 9.5.0 through the Gradle Wrapper
 - JDK 21 for Gradle daemon and Android build execution
 - Hilt 2.60.1 with KSP 2.3.9
+- Room 2.8.4
+- Kotlin coroutines 1.11.0
 - minimum SDK 29
 - target SDK 36
 - compile SDK 36.1
 - JUnit and Android lint
 - GitHub Actions
 
-Additional libraries such as Room and DataStore will be introduced only when required by the relevant increment.
+DataStore will be introduced only when a concrete preference-like use case is not already owned by Room.
 
 ## Build locally
 
 On Windows:
 
 ```powershell
-.\gradlew.bat test lint assembleDebug
+.\gradlew.bat test lint assembleDebug assembleDebugAndroidTest
 ```
 
 On Linux or macOS:
 
 ```bash
-./gradlew test lint assembleDebug
+./gradlew test lint assembleDebug assembleDebugAndroidTest
 ```
 
 ## License

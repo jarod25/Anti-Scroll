@@ -61,7 +61,7 @@ This is a pure Kotlin/JVM module and depends only on `domain`.
 
 Room database, DataStore-backed settings where appropriate, repository implementations, entity/domain mapping and migrations.
 
-This is an Android library module and depends only on `domain`.
+This is an Android library module and depends only on `domain`. It owns the Room database schema, DAO implementations, schema snapshots and persistence-specific Hilt bindings. Room entities and DAOs do not cross the module boundary as domain-facing contracts.
 
 ### `monitoring`
 
@@ -111,7 +111,7 @@ The injection boundary follows these rules:
 - `data` and `monitoring` add Hilt dependencies only when they own real injectable implementations or binding modules;
 - artificial bindings are not created merely to demonstrate that Hilt compiles.
 
-The application component is initialized by `AntiScrollApplication`. Android framework classes become entry points only when they require injected dependencies.
+The application component is initialized by `AntiScrollApplication`. Android framework classes become entry points only when they require injected dependencies. `AntiScrollDatabase` is a process-wide singleton provided from `data` because Room owns its construction lifecycle.
 
 ## Main components
 
@@ -168,7 +168,11 @@ Generic `Utils`, `Helper` and vague `Manager` classes are avoided.
 
 Room stores structured history and restriction state. DataStore may hold small preferences that do not duplicate Room-owned data.
 
-Repositories expose domain types and flows. UI code does not query DAOs directly.
+The Room schema is versioned from the first table. Generated schema snapshots are committed under `data/schemas` and verified by CI. Every schema version change requires an explicit migration or reviewed auto-migration, plus instrumentation tests that validate both schema and transformed data. Production database construction never enables destructive migration fallback.
+
+The initial `monitored_applications` table uses Android package names as stable identifiers. Display labels and icons are resolved from Android rather than treated as persisted identity data.
+
+Repositories expose domain types and flows. UI code does not query DAOs directly. Persistence entities remain separate from domain models even when their fields initially look similar.
 
 ## Error handling
 

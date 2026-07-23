@@ -41,6 +41,16 @@ jobs:
       - name: Run verification tasks
         run: ./gradlew --no-daemon --stacktrace test lint assembleDebug assembleDebugAndroidTest
 
+      - name: Verify Room schema snapshots
+        shell: bash
+        run: |
+          changes="$(git status --porcelain -- data/schemas)"
+          if [[ -n "$changes" ]]; then
+            echo "Room schema snapshots are not synchronized with the database definition:"
+            echo "$changes"
+            exit 1
+          fi
+
       - name: Upload verification reports on failure
         if: failure()
         uses: actions/upload-artifact@v7
@@ -50,3 +60,4 @@ jobs:
           path: |
             **/build/reports/
             **/build/test-results/
+            data/schemas/
