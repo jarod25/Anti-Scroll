@@ -30,11 +30,11 @@ The complete product specification is maintained in the project's requirements d
 
 ## Current toolchain
 
-- Kotlin 2.2.10
+- Kotlin 2.2.10 for the Android application
 - Jetpack Compose
 - Android Gradle Plugin 9.3.1
 - Gradle 9.5.0 through the Gradle Wrapper
-- JDK 17 for build execution
+- JDK 21 for Gradle daemon and Android build execution
 - minimum SDK 29
 - target SDK 36
 - compile SDK 36.1
