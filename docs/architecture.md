@@ -24,38 +24,77 @@ The initial module set is deliberately small:
 
 ```text
 app
-core
 domain
-data
 engine
+data
 monitoring
 ```
+
+A generic `core` module is intentionally deferred. Shared modules are created only after a concrete responsibility and dependency boundary exists. When required, narrowly scoped modules such as `core:time` or `core:testing` are preferred over a miscellaneous utility container.
 
 ### `app`
 
 Android application composition, dependency injection setup, navigation, Compose screens and process entry points.
 
-### `core`
+Dependencies:
 
-Small, genuinely shared technical primitives. This module must not become a miscellaneous utility dump.
+```text
+domain
+engine
+data
+monitoring
+```
 
 ### `domain`
 
 Immutable business models, repository contracts, clocks, restriction rule contracts and pure use cases.
 
-### `data`
-
-Room database, DataStore-backed settings where appropriate, repository implementations, entity/domain mapping and migrations.
+This is a pure Kotlin/JVM module and has no project dependencies.
 
 ### `engine`
 
 Restriction orchestration, session state transitions, quota evaluation and deterministic rule execution.
 
+This is a pure Kotlin/JVM module and depends only on `domain`.
+
+### `data`
+
+Room database, DataStore-backed settings where appropriate, repository implementations, entity/domain mapping and migrations.
+
+This is an Android library module and depends only on `domain`.
+
 ### `monitoring`
 
 Android-specific observation: UsageStats integration, accessibility events, boot/time-change signals and conversion to normalized domain events.
 
+This is an Android library module and depends only on `domain`.
+
 Additional modules are created only when they provide a real dependency, ownership or compilation boundary.
+
+## Module dependency graph
+
+```text
+                  app
+         ┌─────────┼─────────┐
+         ↓         ↓         ↓
+    monitoring    data     engine
+         │         │         │
+         └─────────┴─────────┘
+                   ↓
+                 domain
+```
+
+The initial allowed project dependencies are:
+
+```text
+app        → domain, engine, data, monitoring
+domain     → none
+engine     → domain
+data       → domain
+monitoring → domain
+```
+
+`data`, `engine` and `monitoring` must not depend on one another. Coordination happens in `app` through contracts and models defined by `domain`.
 
 ## Main components
 
