@@ -70,12 +70,15 @@ The initial project baseline is:
 
 - Android Gradle Plugin 9.3.1
 - Gradle 9.5.0 through the Gradle Wrapper
-- JDK 17 for Gradle and Android build execution
-- Kotlin 2.2.10
+- JDK 21 for the Gradle daemon and Android build execution
+- Kotlin 2.2.10 for the Android application
+- Gradle embedded Kotlin 2.3.20 for Kotlin DSL execution
 - Jetpack Compose with the Compose BOM
 - minimum SDK 29
 - target SDK 36
 - compile SDK 36.1
+
+The required Gradle daemon JVM is versioned in `gradle/gradle-daemon-jvm.properties`. The local launcher JVM may differ, but Gradle must resolve and run a daemon matching the committed Java 21 criteria.
 
 Dependency versions are centralized in `gradle/libs.versions.toml` whenever the dependency model supports it.
 
