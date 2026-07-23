@@ -35,13 +35,14 @@ The complete product specification is maintained in the project's requirements d
 - Android Gradle Plugin 9.3.1
 - Gradle 9.5.0 through the Gradle Wrapper
 - JDK 21 for Gradle daemon and Android build execution
+- Hilt 2.60.1 with KSP 2.3.9
 - minimum SDK 29
 - target SDK 36
 - compile SDK 36.1
 - JUnit and Android lint
 - GitHub Actions
 
-Additional libraries such as Room, DataStore and Hilt will be introduced only when required by the relevant increment.
+Additional libraries such as Room and DataStore will be introduced only when required by the relevant increment.
 
 ## Build locally
 
