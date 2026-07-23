@@ -53,13 +53,13 @@ Release branches target `main` only when a version is ready for delivery. Releas
 Run the same core tasks used by continuous integration:
 
 ```powershell
-.\gradlew.bat test lint assembleDebug
+.\gradlew.bat test lint assembleDebug assembleDebugAndroidTest
 ```
 
 On Linux or macOS:
 
 ```bash
-./gradlew test lint assembleDebug
+./gradlew test lint assembleDebug assembleDebugAndroidTest
 ```
 
 The build must use the committed Gradle Wrapper. A locally installed Gradle version is not part of the supported workflow.
@@ -75,6 +75,8 @@ The initial project baseline is:
 - Gradle embedded Kotlin 2.3.20 for Kotlin DSL execution
 - Hilt 2.60.1
 - KSP 2.3.9
+- Room 2.8.4
+- Kotlin coroutines 1.11.0
 - Jetpack Compose with the Compose BOM
 - minimum SDK 29
 - target SDK 36
@@ -90,9 +92,13 @@ Every pull request must pass:
 
 - unit tests;
 - Android lint;
-- debug APK assembly;
+- debug application APK assembly;
+- debug instrumentation-test APK assembly;
+- Room schema snapshot synchronization when persistence definitions change;
 - Gradle Wrapper checksum validation performed by the Gradle setup action;
 - review of the affected documentation and architecture decisions.
+
+Room schema files under `data/schemas` are version-controlled artifacts. A database change is incomplete when generated schemas differ from the committed snapshots.
 
 Static-analysis or formatting plugins must not be added only for appearance. Their compatibility with the active Android Gradle Plugin, Gradle and Kotlin versions must be verified before adoption.
 
@@ -106,6 +112,7 @@ A change is complete when:
 - Android lint passes without newly introduced critical findings;
 - the application builds successfully;
 - emulator or physical-device validation is completed when system behavior is involved;
+- persistence migrations and schema snapshots are updated when database definitions change;
 - documentation and ADRs are updated when the change affects architecture or workflow;
 - no local configuration, generated build output, credentials or sensitive data are committed.
 
