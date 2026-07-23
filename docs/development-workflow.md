@@ -73,6 +73,8 @@ The initial project baseline is:
 - JDK 21 for the Gradle daemon and Android build execution
 - Kotlin 2.2.10 for the Android application
 - Gradle embedded Kotlin 2.3.20 for Kotlin DSL execution
+- Hilt 2.60.1
+- KSP 2.3.9
 - Jetpack Compose with the Compose BOM
 - minimum SDK 29
 - target SDK 36

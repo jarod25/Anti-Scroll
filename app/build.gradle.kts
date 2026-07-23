@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -29,12 +31,16 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
     }
+}
+
+hilt {
+    enableAggregatingTask = true
 }
 
 dependencies {
@@ -42,6 +48,9 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":engine"))
     implementation(project(":monitoring"))
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

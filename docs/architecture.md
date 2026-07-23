@@ -96,6 +96,23 @@ monitoring → domain
 
 `data`, `engine` and `monitoring` must not depend on one another. Coordination happens in `app` through contracts and models defined by `domain`.
 
+## Dependency injection
+
+Hilt is the Android dependency-injection framework. KSP performs Hilt code generation.
+
+The injection boundary follows these rules:
+
+- `app` owns the process-level Hilt application component and remains the composition root;
+- `domain` and `engine` never import Hilt, Dagger or Android injection annotations;
+- constructor injection is preferred for project-owned implementations;
+- interface bindings use `@Binds` when possible;
+- `@Provides` is reserved for framework or third-party objects that cannot use constructor injection;
+- scopes are added only when lifecycle and ownership are explicit;
+- `data` and `monitoring` add Hilt dependencies only when they own real injectable implementations or binding modules;
+- artificial bindings are not created merely to demonstrate that Hilt compiles.
+
+The application component is initialized by `AntiScrollApplication`. Android framework classes become entry points only when they require injected dependencies.
+
 ## Main components
 
 ```text
