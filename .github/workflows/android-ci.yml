@@ -1,0 +1,52 @@
+name: Android CI
+
+on:
+  push: {}
+  pull_request:
+    branches:
+      - main
+      - develop
+
+concurrency:
+  group: android-ci-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Build, test and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Run verification tasks
+        run: ./gradlew --no-daemon --stacktrace test lint assembleDebug
+
+      - name: Upload verification reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-verification-reports
+          if-no-files-found: ignore
+          path: |
+            app/build/reports/
+            app/build/test-results/

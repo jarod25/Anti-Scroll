@@ -1,0 +1,34 @@
+version: 2
+
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+    groups:
+      android-build-dependencies:
+        patterns:
+          - "com.android.*"
+          - "org.jetbrains.kotlin*"
+      androidx-dependencies:
+        patterns:
+          - "androidx.*"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:30"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
