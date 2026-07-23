@@ -8,8 +8,14 @@ This directory contains the technical documentation used as the development refe
 - [`architecture.md`](architecture.md): software architecture, module boundaries and dependency rules.
 - [`restriction-engine.md`](restriction-engine.md): rule-based decision engine and restriction model.
 - [`android-integration.md`](android-integration.md): Android APIs, permissions, monitoring strategy and platform limits.
+- [`development-workflow.md`](development-workflow.md): Git workflow, toolchain baseline, quality gates and local validation.
 - [`roadmap.md`](roadmap.md): incremental delivery plan and acceptance targets.
 - [`adr/`](adr/): Architecture Decision Records.
+
+## Architecture decisions
+
+- [`ADR-001`](adr/001-rule-based-restriction-engine.md): adopt a rule-based restriction engine.
+- [`ADR-002`](adr/002-build-toolchain-and-continuous-integration.md): establish the build toolchain and continuous integration baseline.
 
 ## Documentation rules
 
