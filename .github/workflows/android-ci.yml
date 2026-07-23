@@ -39,7 +39,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run verification tasks
-        run: ./gradlew --no-daemon --stacktrace test lint assembleDebug
+        run: ./gradlew --no-daemon --stacktrace test lint assembleDebug assembleDebugAndroidTest
 
       - name: Upload verification reports on failure
         if: failure()
@@ -48,5 +48,5 @@ jobs:
           name: android-verification-reports
           if-no-files-found: ignore
           path: |
-            app/build/reports/
-            app/build/test-results/
+            **/build/reports/
+            **/build/test-results/
