@@ -16,6 +16,7 @@ This directory contains the technical documentation used as the development refe
 
 - [`ADR-001`](adr/001-rule-based-restriction-engine.md): adopt a rule-based restriction engine.
 - [`ADR-002`](adr/002-build-toolchain-and-continuous-integration.md): establish the build toolchain and continuous integration baseline.
+- [`ADR-003`](adr/003-initial-module-boundaries.md): define the initial Gradle modules and dependency direction.
 
 ## Documentation rules
 
