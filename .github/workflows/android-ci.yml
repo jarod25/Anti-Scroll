@@ -1,14 +1,7 @@
 name: Android CI
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - "feature/**"
-      - "fix/**"
-      - "release/**"
-      - "hotfix/**"
+  push: {}
   pull_request:
     branches:
       - main
