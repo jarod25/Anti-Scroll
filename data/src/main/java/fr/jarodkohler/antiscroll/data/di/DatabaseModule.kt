@@ -16,11 +16,9 @@ import javax.inject.Singleton
 object DatabaseModule {
     @Provides
     @Singleton
-    fun provideAntiScrollDatabase(
-        @ApplicationContext context: Context,
-    ): AntiScrollDatabase = Room.databaseBuilder(
+    fun provideAntiScrollDatabase(@ApplicationContext context: Context): AntiScrollDatabase = Room.databaseBuilder(
         context,
         AntiScrollDatabase::class.java,
-        AntiScrollDatabaseSchema.NAME,
+        AntiScrollDatabaseSchema.NAME
     ).build()
 }
