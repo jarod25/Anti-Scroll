@@ -12,5 +12,5 @@ data class MonitoredApplicationEntity(
     @ColumnInfo(name = "is_enabled")
     val isEnabled: Boolean,
     @ColumnInfo(name = "added_at_epoch_millis")
-    val addedAtEpochMillis: Long,
+    val addedAtEpochMillis: Long
 )

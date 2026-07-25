@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-07-23
+- Last amended: 2026-07-25
 - Decision owners: Project maintainers
 
 ## Context
@@ -19,7 +20,7 @@ The project adopts the following build and validation baseline:
 - GitHub Actions installs JDK 21 so the launcher and daemon use the same Java major version.
 - The committed Gradle Wrapper is the only supported Gradle entry point.
 - GitHub Actions validates pushes to all branches and pull requests targeting `main` or `develop`.
-- The validation pipeline executes unit tests, Android lint and debug APK assembly.
+- The validation pipeline executes formatting checks, unit tests, Android lint and debug APK assembly.
 - `gradle/actions/setup-gradle` validates the Gradle Wrapper and provides dependency caching.
 - The open-source basic cache provider is used.
 - Verification reports are uploaded when the workflow fails.
@@ -28,7 +29,7 @@ The project adopts the following build and validation baseline:
 
 Kotlin 2.2.10 is the Android application plugin version. The Kotlin version displayed by `gradlew --version` is Gradle's embedded Kotlin used for Kotlin DSL execution and is not the application Kotlin plugin version.
 
-Detekt, ktlint Gradle integration or equivalent third-party analysis plugins are deferred until compatibility has been tested in isolation. Android lint, tests, compilation and code review remain mandatory in the meantime.
+ADR-006 adopts Spotless with a pinned ktlint engine as the formatting gate. Android lint remains the primary static-analysis tool, while Detekt remains deferred until a stable release matches the active build toolchain and the codebase demonstrates a concrete need for its rule set.
 
 ## Alternatives considered
 
@@ -52,20 +53,22 @@ This configuration works because Gradle can resolve a separate daemon JVM matchi
 - Local and CI Gradle daemons use the same Java major version.
 - The required daemon JVM is explicit and versioned.
 - The same Gradle Wrapper is used locally and in CI.
-- Android lint and unit tests become merge gates from the beginning.
-- The initial pipeline remains understandable and maintainable.
-- Additional quality tools can be evaluated without blocking project initialization.
+- Formatting, Android lint and unit tests are merge gates.
+- The pipeline remains understandable and maintainable.
+- Additional quality tools can be evaluated without blocking product development.
 
 ### Negative
 
 - Contributors need access to Java 21 or must allow Gradle toolchain provisioning.
-- Formatting is configured but not yet enforced by a dedicated Gradle task.
-- Kotlin-specific static analysis is initially limited to compiler diagnostics, Android lint and review.
+- CI resolves and executes an additional formatting plugin.
+- Kotlin-specific static analysis remains limited to compiler diagnostics, Android lint and review until Detekt adoption is justified.
 - CI depends on GitHub-hosted runner availability.
 
 ## Migration and rollback
 
 The workflow and repository configuration are additive. They can be updated or removed without migrating application data. If Java 21 becomes incompatible with a future Android toolchain version, the daemon JVM criteria, CI runtime and documentation must be changed together in one pull request.
+
+Formatting-tool rollback is documented in ADR-006 and does not affect application data or module boundaries.
 
 ## Validation
 
@@ -74,6 +77,6 @@ The decision is validated when:
 - the workflow succeeds with JDK 21;
 - the Gradle Wrapper checksum is accepted;
 - `gradlew --version` reports a Java 21 daemon locally;
-- `test`, `lint` and `assembleDebug` succeed on GitHub Actions;
+- `spotlessCheck`, `test`, `lint` and `assembleDebug` succeed on GitHub Actions;
 - the same commands succeed on the local Windows development environment;
-- a deliberately failing test or lint violation causes the workflow to fail during a future pipeline verification exercise.
+- deliberately introduced formatting, test or lint violations cause the workflow to fail.

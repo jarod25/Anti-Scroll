@@ -8,7 +8,9 @@ Anti-Scroll is not intended to be another screen-time dashboard. Its core purpos
 
 ## Project status
 
-The project is currently in increment 0: establishing a reproducible Android build, continuous integration, repository conventions and the technical documentation required before product features are implemented.
+Increment 0 is complete. The project has a reproducible multi-module Android foundation, dependency injection, versioned Room persistence, migration-test infrastructure, enforced Kotlin formatting, static checks and continuous integration.
+
+The next delivery stage is increment 1: observation foundation and trustworthy local usage collection.
 
 ## Core principles
 
@@ -38,6 +40,7 @@ The complete product specification is maintained in the project's requirements d
 - Hilt 2.60.1 with KSP 2.3.9
 - Room 2.8.4
 - Kotlin coroutines 1.11.0
+- Spotless 8.8.0 with ktlint 1.8.0
 - minimum SDK 29
 - target SDK 36
 - compile SDK 36.1
@@ -51,13 +54,20 @@ DataStore will be introduced only when a concrete preference-like use case is no
 On Windows:
 
 ```powershell
-.\gradlew.bat test lint assembleDebug assembleDebugAndroidTest
+.\gradlew.bat spotlessCheck test lint assembleDebug assembleDebugAndroidTest
+```
+
+Apply Kotlin formatting automatically with:
+
+```powershell
+.\gradlew.bat spotlessApply
 ```
 
 On Linux or macOS:
 
 ```bash
-./gradlew test lint assembleDebug assembleDebugAndroidTest
+./gradlew spotlessCheck test lint assembleDebug assembleDebugAndroidTest
+./gradlew spotlessApply
 ```
 
 ## License
