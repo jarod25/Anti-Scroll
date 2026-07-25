@@ -14,6 +14,8 @@ Detekt was evaluated as an additional Kotlin code-smell analyzer. Its stable 1.x
 
 Spotless 8.8.0 supports Gradle configuration cache and can run a pinned ktlint engine. ktlint 1.8.0 supports current Kotlin syntax and provides deterministic formatting for Kotlin source and Kotlin Gradle scripts.
 
+The repository already enforces LF line endings through `.gitattributes`. Spotless therefore uses an explicit UNIX line-ending policy instead of its default Git-derived provider. This keeps Windows, Linux and macOS output identical while avoiding configuration-cache serialization failures caused by Gradle internal lock files on Windows.
+
 ## Decision
 
 The project adopts the following Kotlin quality policy:
@@ -23,6 +25,7 @@ The project adopts the following Kotlin quality policy:
 - one root Spotless configuration covers every committed `*.kt` and `*.gradle.kts` file;
 - generated and build directories are excluded;
 - formatting conventions are stored in `.editorconfig`;
+- LF line endings are enforced explicitly and remain aligned with `.gitattributes`;
 - `spotlessCheck` is a mandatory CI gate;
 - `spotlessApply` is the supported automatic formatting command;
 - no formatting baseline, ratchet or existing-violation suppression is introduced;
@@ -67,6 +70,10 @@ The modern Detekt line targets current Gradle and Android tooling, but it remain
 
 A ratchet would check only newly changed files and leave existing violations accepted. The current codebase is small, so all committed Kotlin files must satisfy the formatter immediately.
 
+### Git-derived Spotless line endings
+
+Spotless defaults to deriving line endings from Git attributes. That is generally appropriate, but the provider failed configuration-cache serialization on the supported Windows environment while Gradle's checksum lock was active. Because this repository already mandates LF line endings, an explicit UNIX policy is simpler and preserves the intended result.
+
 ## Consequences
 
 ### Positive
@@ -75,6 +82,7 @@ A ratchet would check only newly changed files and leave existing violations acc
 - formatting violations fail before merge;
 - most formatting problems can be corrected automatically;
 - the configuration remains centralized and versioned;
+- Spotless tasks remain compatible with the project configuration cache on Windows;
 - no duplicate code-smell analyzer is added before it provides clear value;
 - Android-specific analysis remains owned by Android lint.
 
@@ -100,6 +108,7 @@ The decision is validated when:
 
 - `spotlessCheck` passes on Windows and GitHub-hosted Linux runners;
 - `spotlessApply` produces a clean subsequent `spotlessCheck`;
+- configuration-cache storage succeeds for Spotless tasks on Windows;
 - formatting violations cause CI to fail;
 - existing Kotlin and Kotlin Gradle files pass without a baseline;
 - Android lint, unit tests and application assembly continue to pass.
