@@ -4,6 +4,8 @@ The roadmap favors an early usable build while preserving clean boundaries aroun
 
 ## Increment 0 — Foundation
 
+**Status: Complete**
+
 ### Goal
 
 Create a buildable Android project with enforceable quality checks and documented architecture.
@@ -29,6 +31,8 @@ Create a buildable Android project with enforceable quality checks and documente
 - application launches on a physical device or emulator.
 
 ## Increment 1 — Observation foundation
+
+**Status: Next**
 
 ### Goal
 
