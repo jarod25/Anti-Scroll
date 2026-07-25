@@ -21,7 +21,7 @@ val kotlinSourceTrees = subprojects.map { module ->
 val kotlinGradleScripts = files(
     file("build.gradle.kts"),
     file("settings.gradle.kts"),
-    subprojects.map { module -> module.file("build.gradle.kts") },
+    subprojects.map { module -> module.file("build.gradle.kts") }
 )
 
 spotless {
