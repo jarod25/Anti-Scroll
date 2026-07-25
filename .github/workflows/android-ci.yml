@@ -55,6 +55,13 @@ jobs:
             exit 1
           fi
 
+      - name: Capture formatter patch on failure
+        if: failure()
+        shell: bash
+        run: |
+          ./gradlew --no-daemon spotlessApply
+          git diff --binary > build/ci/spotless.patch
+
       - name: Upload verification reports on failure
         if: failure()
         uses: actions/upload-artifact@v7
@@ -63,6 +70,7 @@ jobs:
           if-no-files-found: ignore
           path: |
             build/ci/verification.log
+            build/ci/spotless.patch
             **/build/reports/
             **/build/test-results/
             data/schemas/
