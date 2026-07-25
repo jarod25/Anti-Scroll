@@ -38,23 +38,42 @@ Create a buildable Android project with enforceable quality checks and documente
 
 Collect trustworthy-enough local usage data and make reliability visible.
 
+### Architecture baseline
+
+- UsageStats is the required historical and recovery source;
+- accessibility monitoring is an optional low-latency experiment behind a domain contract;
+- normalized usage observations form the durable journal;
+- daily usage values are rebuildable persisted projections;
+- checkpoints and collection gaps make recovery and uncertainty explicit;
+- WorkManager provides persistent deferrable reconciliation without being treated as a real-time guarantee;
+- increment 1 introduces no permanent foreground service, broad package-visibility permission or blocking behavior.
+
+The detailed decision is recorded in ADR-007.
+
 ### Deliverables
 
-- onboarding and permission health screen;
-- monitored application configuration;
-- UsageStats integration;
+- onboarding and real permission-health screen;
+- monitored application configuration from a versioned package catalog;
+- UsageStats integration with API-appropriate query filtering;
 - accessibility monitoring experiment behind an interface;
-- normalized usage events;
-- persisted daily usage;
-- minimal dashboard;
-- collection-gap diagnostics;
-- process and device restart restoration.
+- immutable normalized usage events;
+- persisted normalized event journal;
+- persisted daily per-application usage projections;
+- collection checkpoints and explicit gap diagnostics;
+- incremental overlapping reconciliation and deterministic deduplication;
+- process and device restart restoration;
+- minimal observation dashboard;
+- local-only data handling.
 
 ### Exit criteria
 
 - monitored applications are detected on the reference device;
 - daily totals can be compared with Android system data;
-- missing permissions and gaps are shown honestly;
+- repeated overlapping reconciliation does not double-count known observations;
+- process recreation and device restart preserve or reconstruct daily totals;
+- missing permission, locked-user state and collection gaps are shown honestly;
+- disabling accessibility does not break UsageStats collection;
+- no unknown period is presented as observed usage;
 - no usage data leaves the device.
 
 ## Increment 2 — Shared sessions and cooldowns

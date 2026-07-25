@@ -113,7 +113,29 @@ The injection boundary follows these rules:
 
 The application component is initialized by `AntiScrollApplication`. Android framework classes become entry points only when they require injected dependencies. `AntiScrollDatabase` is a process-wide singleton provided from `data` because Room owns its construction lifecycle.
 
-## Main components
+## Observation pipeline
+
+Increment 1 separates Android acquisition, normalization, persistence and projection:
+
+```text
+UsageStats source ───────┐
+Accessibility source ────┼─> UsageObservationNormalizer -> UsageEventRepository
+System signal source ────┘                                  |
+                                                             -> DailyUsageProjection
+                                                             -> MonitoringHealth
+```
+
+UsageStats is the required historical and recovery source. Accessibility remains an optional low-latency experiment behind a domain-facing source contract. System signals report conditions that affect recovery or interpretation, such as boot, user unlock, time-zone changes and package changes.
+
+Source implementations live in `monitoring`. Repository implementations and Room entities live in `data`. The `app` module composes them through contracts and immutable models owned by `domain`; sibling implementation modules never call one another directly.
+
+Normalized usage events are the durable observation journal. Daily usage values are persisted projections that can be rebuilt from the journal. Collection checkpoints and explicit gaps make delayed or missing data visible instead of allowing the application to invent durations.
+
+Reconciliation is incremental and idempotent. Application lifecycle events and persistent deferrable work request bounded historical queries with an overlap before the last checkpoint. Normalization and deterministic deduplication happen before projections are updated. WorkManager supports recovery but is not treated as a real-time execution guarantee.
+
+The detailed source, persistence and recovery decision is recorded in ADR-007.
+
+## Main restriction components
 
 ```text
 SystemUsageMonitor
@@ -144,7 +166,8 @@ Critical state includes:
 - active cooldown and expiry information;
 - daily quota consumption;
 - monitored application configuration;
-- permission and monitoring health;
+- normalized usage observations and daily usage projections;
+- collection checkpoints, gaps and monitoring health;
 - block decisions and opening attempts.
 
 ## Time handling
@@ -171,6 +194,8 @@ Room stores structured history and restriction state. DataStore may hold small p
 The Room schema is versioned from the first table. Generated schema snapshots are committed under `data/schemas` and verified by CI. Every schema version change requires an explicit migration or reviewed auto-migration, plus instrumentation tests that validate both schema and transformed data. Production database construction never enables destructive migration fallback.
 
 The initial `monitored_applications` table uses Android package names as stable identifiers. Display labels and icons are resolved from Android rather than treated as persisted identity data.
+
+Observation persistence stores normalized usage events as the durable journal, daily per-application usage as rebuildable projections, and collection checkpoints or gaps as explicit diagnostic state. Event insertion, checkpoint advancement and affected projection updates must be transactional when they form one logical reconciliation step.
 
 Repositories expose domain types and flows. UI code does not query DAOs directly. Persistence entities remain separate from domain models even when their fields initially look similar.
 
