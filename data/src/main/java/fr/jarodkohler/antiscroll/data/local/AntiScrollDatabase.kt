@@ -11,7 +11,7 @@ object AntiScrollDatabaseSchema {
 @Database(
     entities = [MonitoredApplicationEntity::class],
     version = AntiScrollDatabaseSchema.VERSION,
-    exportSchema = true,
+    exportSchema = true
 )
 abstract class AntiScrollDatabase : RoomDatabase() {
     abstract fun monitoredApplicationDao(): MonitoredApplicationDao
