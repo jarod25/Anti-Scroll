@@ -16,14 +16,16 @@ Spotless 8.8.0 supports Gradle configuration cache and can run a pinned ktlint e
 
 The repository already enforces LF line endings through `.gitattributes`. Spotless therefore uses an explicit UNIX line-ending policy instead of its default Git-derived provider. This keeps Windows, Linux and macOS output identical while avoiding configuration-cache serialization failures caused by Gradle internal lock files on Windows.
 
+Spotless targets are rooted directly in each module's `src` directory and in the known root and module Gradle Kotlin scripts. Broad repository-wide recursive globs are avoided because they may traverse transient Android build-output directories before exclusion rules are applied on Windows.
+
 ## Decision
 
 The project adopts the following Kotlin quality policy:
 
 - Spotless 8.8.0 is the repository formatting integration;
 - ktlint 1.8.0 is the pinned Kotlin formatting engine;
-- one root Spotless configuration covers every committed `*.kt` and `*.gradle.kts` file;
-- generated and build directories are excluded;
+- one root Spotless configuration covers every module Kotlin source under `src` and every root or module `build.gradle.kts` plus `settings.gradle.kts`;
+- generated and build directories are never formatting inputs;
 - formatting conventions are stored in `.editorconfig`;
 - LF line endings are enforced explicitly and remain aligned with `.gitattributes`;
 - `spotlessCheck` is a mandatory CI gate;
@@ -68,11 +70,15 @@ The modern Detekt line targets current Gradle and Android tooling, but it remain
 
 ### Spotless ratchet or formatting baseline
 
-A ratchet would check only newly changed files and leave existing violations accepted. The current codebase is small, so all committed Kotlin files must satisfy the formatter immediately.
+A ratchet would check only newly changed files and leave existing violations accepted. The current codebase is small, so all committed Kotlin inputs must satisfy the formatter immediately.
 
 ### Git-derived Spotless line endings
 
 Spotless defaults to deriving line endings from Git attributes. That is generally appropriate, but the provider failed configuration-cache serialization on the supported Windows environment while Gradle's checksum lock was active. Because this repository already mandates LF line endings, an explicit UNIX policy is simpler and preserves the intended result.
+
+### Repository-wide recursive source globs
+
+A root-level `**/*.kt` target appears concise, but Spotless may traverse transient `build` directories before applying exclusions. Android resource-processing directories can be unreadable while Gradle is operating on them under Windows. Source-rooted file trees avoid generated output entirely and remain automatically extensible to new Gradle modules.
 
 ## Consequences
 
@@ -83,6 +89,8 @@ Spotless defaults to deriving line endings from Git attributes. That is generall
 - most formatting problems can be corrected automatically;
 - the configuration remains centralized and versioned;
 - Spotless tasks remain compatible with the project configuration cache on Windows;
+- generated Android build output is never traversed by formatting tasks;
+- newly added Gradle modules are covered automatically through their `src` directories and module build scripts;
 - no duplicate code-smell analyzer is added before it provides clear value;
 - Android-specific analysis remains owned by Android lint.
 
@@ -90,6 +98,7 @@ Spotless defaults to deriving line endings from Git attributes. That is generall
 
 - local and CI builds resolve an additional Gradle plugin and formatting engine;
 - contributors must run `spotlessApply` when formatting checks fail;
+- Kotlin files intentionally stored outside module `src` directories require an explicit formatting target;
 - Kotlin-specific complexity and maintainability smells beyond Android lint are not yet enforced automatically;
 - ktlint upgrades can produce repository-wide formatting changes and therefore require review.
 
@@ -100,6 +109,7 @@ This decision must be reconsidered when any of the following occurs:
 - Detekt 2.x reaches a stable release compatible with the active toolchain;
 - the restriction engine or data layer develops complexity that Android lint does not measure well;
 - recurring review findings show that a specific static rule would prevent real defects;
+- Kotlin source is introduced outside Gradle module `src` directories;
 - Spotless or ktlint becomes incompatible with the supported Gradle configuration.
 
 ## Validation
@@ -109,6 +119,7 @@ The decision is validated when:
 - `spotlessCheck` passes on Windows and GitHub-hosted Linux runners;
 - `spotlessApply` produces a clean subsequent `spotlessCheck`;
 - configuration-cache storage succeeds for Spotless tasks on Windows;
+- formatting tasks do not traverse generated Android build output;
 - formatting violations cause CI to fail;
-- existing Kotlin and Kotlin Gradle files pass without a baseline;
+- existing Kotlin and Kotlin Gradle inputs pass without a baseline;
 - Android lint, unit tests and application assembly continue to pass.
