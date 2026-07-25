@@ -12,20 +12,30 @@ plugins {
     alias(libs.plugins.room) apply false
 }
 
+val kotlinSourceTrees = subprojects.map { module ->
+    module.fileTree("src") {
+        include("**/*.kt")
+    }
+}
+
+val kotlinGradleScripts = files(
+    file("build.gradle.kts"),
+    file("settings.gradle.kts"),
+    subprojects.map { module -> module.file("build.gradle.kts") },
+)
+
 spotless {
     lineEndings = LineEnding.UNIX
 
     kotlin {
-        target("**/*.kt")
-        targetExclude("**/build/**", "**/.gradle/**")
+        target(kotlinSourceTrees)
         ktlint(libs.versions.ktlint.get())
         trimTrailingWhitespace()
         endWithNewline()
     }
 
     kotlinGradle {
-        target("*.gradle.kts", "**/*.gradle.kts")
-        targetExclude("**/build/**", "**/.gradle/**")
+        target(kotlinGradleScripts)
         ktlint(libs.versions.ktlint.get())
         trimTrailingWhitespace()
         endWithNewline()
