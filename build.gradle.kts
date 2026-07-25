@@ -1,3 +1,5 @@
+import com.diffplug.spotless.LineEnding
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
     alias(libs.plugins.spotless)
@@ -11,6 +13,8 @@ plugins {
 }
 
 spotless {
+    lineEndings = LineEnding.UNIX
+
     kotlin {
         target("**/*.kt")
         targetExclude("**/build/**", "**/.gradle/**")
