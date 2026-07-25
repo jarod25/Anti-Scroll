@@ -20,6 +20,7 @@ This directory contains the technical documentation used as the development refe
 - [`ADR-004`](adr/004-hilt-dependency-injection.md): adopt Hilt and KSP for Android dependency injection.
 - [`ADR-005`](adr/005-room-persistence-foundation.md): establish Room, schema versioning and migration policy.
 - [`ADR-006`](adr/006-kotlin-quality-gates.md): enforce Kotlin formatting and define the static-analysis policy.
+- [`ADR-007`](adr/007-observation-monitoring-and-recovery.md): define observation sources, normalized persistence and recovery.
 
 ## Documentation rules
 
