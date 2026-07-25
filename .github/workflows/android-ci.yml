@@ -59,7 +59,7 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          ./gradlew --no-daemon spotlessApply
+          ./gradlew --no-daemon spotlessApply || true
           git diff --binary > build/ci/spotless.patch
 
       - name: Upload verification reports on failure
