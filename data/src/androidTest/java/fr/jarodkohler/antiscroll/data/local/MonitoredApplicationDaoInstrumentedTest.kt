@@ -21,7 +21,7 @@ class MonitoredApplicationDaoInstrumentedTest {
     fun createDatabase() {
         database = Room.inMemoryDatabaseBuilder(
             InstrumentationRegistry.getInstrumentation().targetContext,
-            AntiScrollDatabase::class.java,
+            AntiScrollDatabase::class.java
         ).allowMainThreadQueries().build()
         dao = database.monitoredApplicationDao()
     }
@@ -36,7 +36,7 @@ class MonitoredApplicationDaoInstrumentedTest {
         val initial = MonitoredApplicationEntity(
             packageName = "com.example.scroll",
             isEnabled = true,
-            addedAtEpochMillis = 1_000L,
+            addedAtEpochMillis = 1_000L
         )
         dao.upsert(initial)
 
@@ -55,7 +55,7 @@ class MonitoredApplicationDaoInstrumentedTest {
         val application = MonitoredApplicationEntity(
             packageName = "com.example.scroll",
             isEnabled = true,
-            addedAtEpochMillis = 1_000L,
+            addedAtEpochMillis = 1_000L
         )
         dao.upsert(application)
 
