@@ -53,16 +53,36 @@ Release branches target `main` only when a version is ready for delivery. Releas
 Run the same core tasks used by continuous integration:
 
 ```powershell
-.\gradlew.bat test lint assembleDebug assembleDebugAndroidTest
+.\gradlew.bat spotlessCheck test lint assembleDebug assembleDebugAndroidTest
 ```
 
 On Linux or macOS:
 
 ```bash
-./gradlew test lint assembleDebug assembleDebugAndroidTest
+./gradlew spotlessCheck test lint assembleDebug assembleDebugAndroidTest
 ```
 
 The build must use the committed Gradle Wrapper. A locally installed Gradle version is not part of the supported workflow.
+
+## Formatting
+
+Spotless checks every committed Kotlin source file and Kotlin Gradle script with the pinned ktlint engine.
+
+Check formatting without modifying files:
+
+```powershell
+.\gradlew.bat spotlessCheck
+```
+
+Apply the formatter automatically:
+
+```powershell
+.\gradlew.bat spotlessApply
+```
+
+On Linux or macOS, replace `.\gradlew.bat` with `./gradlew`.
+
+Formatting rules are stored in `.editorconfig`. No formatting baseline or changed-files-only ratchet is used: the entire committed Kotlin codebase must remain clean.
 
 ## Toolchain baseline
 
@@ -77,6 +97,7 @@ The initial project baseline is:
 - KSP 2.3.9
 - Room 2.8.4
 - Kotlin coroutines 1.11.0
+- Spotless 8.8.0 with ktlint 1.8.0
 - Jetpack Compose with the Compose BOM
 - minimum SDK 29
 - target SDK 36
@@ -90,6 +111,7 @@ Dependency versions are centralized in `gradle/libs.versions.toml` whenever the 
 
 Every pull request must pass:
 
+- Kotlin formatting checks;
 - unit tests;
 - Android lint;
 - debug application APK assembly;
@@ -100,7 +122,7 @@ Every pull request must pass:
 
 Room schema files under `data/schemas` are version-controlled artifacts. A database change is incomplete when generated schemas differ from the committed snapshots.
 
-Static-analysis or formatting plugins must not be added only for appearance. Their compatibility with the active Android Gradle Plugin, Gradle and Kotlin versions must be verified before adoption.
+Android lint remains the primary static-analysis tool. Detekt is intentionally deferred until a stable release supports the active toolchain and recurring code-review findings demonstrate that an additional Kotlin rule set would prevent meaningful defects.
 
 ## Definition of done
 
@@ -108,6 +130,7 @@ A change is complete when:
 
 - the implementation matches the documented requirement;
 - the code has a clear responsibility and respects dependency boundaries;
+- committed Kotlin files pass `spotlessCheck`;
 - relevant tests exist and pass;
 - Android lint passes without newly introduced critical findings;
 - the application builds successfully;
