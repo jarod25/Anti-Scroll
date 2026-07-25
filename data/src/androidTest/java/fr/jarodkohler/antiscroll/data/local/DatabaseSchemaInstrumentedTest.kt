@@ -13,7 +13,7 @@ class DatabaseSchemaInstrumentedTest {
     @get:Rule
     val migrationHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        AntiScrollDatabase::class.java,
+        AntiScrollDatabase::class.java
     )
 
     @Test
@@ -23,7 +23,7 @@ class DatabaseSchemaInstrumentedTest {
         try {
             database.query(
                 "SELECT name FROM sqlite_master " +
-                    "WHERE type = 'table' AND name = 'monitored_applications'",
+                    "WHERE type = 'table' AND name = 'monitored_applications'"
             ).use { cursor ->
                 assertTrue(cursor.moveToFirst())
             }
