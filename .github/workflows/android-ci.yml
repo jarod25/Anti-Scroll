@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   validate:
-    name: Build, test and lint
+    name: Format, build, test and lint
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -39,7 +39,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run verification tasks
-        run: ./gradlew --no-daemon --stacktrace test lint assembleDebug assembleDebugAndroidTest
+        run: ./gradlew --no-daemon --stacktrace spotlessCheck test lint assembleDebug assembleDebugAndroidTest
 
       - name: Verify Room schema snapshots
         shell: bash
