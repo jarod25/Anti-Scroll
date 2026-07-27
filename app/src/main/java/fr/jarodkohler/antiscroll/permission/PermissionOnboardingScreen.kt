@@ -199,13 +199,9 @@ private fun usageAccessPresentation(status: UsageAccessStatus): UsageAccessPrese
 @StringRes
 private fun accessibilityStatusRes(status: AccessibilityMonitoringStatus): Int = when (status) {
     AccessibilityMonitoringStatus.DISABLED -> R.string.accessibility_disabled
-
     AccessibilityMonitoringStatus.ENABLED -> R.string.accessibility_enabled
-
     AccessibilityMonitoringStatus.DISCONNECTED -> R.string.accessibility_disconnected
-
     AccessibilityMonitoringStatus.UNSUPPORTED -> R.string.accessibility_unsupported
-
     AccessibilityMonitoringStatus.ERROR -> R.string.accessibility_error
 }
 
