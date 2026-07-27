@@ -139,13 +139,12 @@ class ObservationModelsTest {
         }
     }
 
-    private fun usageEvent(occurredAt: Instant): NormalizedUsageEvent =
-        NormalizedUsageEvent(
-            id = UsageEventId("usage-stats:${occurredAt.toEpochMilli()}"),
-            packageName = packageName,
-            type = UsageEventType.FOREGROUND_ENTERED,
-            occurredAt = occurredAt,
-            source = UsageEventSource.USAGE_STATS,
-            reliability = UsageEventReliability.OBSERVED
-        )
+    private fun usageEvent(occurredAt: Instant): NormalizedUsageEvent = NormalizedUsageEvent(
+        id = UsageEventId("usage-stats:${occurredAt.toEpochMilli()}"),
+        packageName = packageName,
+        type = UsageEventType.FOREGROUND_ENTERED,
+        occurredAt = occurredAt,
+        source = UsageEventSource.USAGE_STATS,
+        reliability = UsageEventReliability.OBSERVED
+    )
 }
