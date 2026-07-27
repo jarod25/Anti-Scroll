@@ -36,9 +36,8 @@ constructor(@ApplicationContext private val context: Context) :
     }
 }
 
-internal fun usageAccessStatusForMode(mode: Int): UsageAccessStatus =
-    if (mode == AppOpsManager.MODE_ALLOWED) {
-        UsageAccessStatus.GRANTED
-    } else {
-        UsageAccessStatus.MISSING
-    }
+internal fun usageAccessStatusForMode(mode: Int): UsageAccessStatus = if (mode == AppOpsManager.MODE_ALLOWED) {
+    UsageAccessStatus.GRANTED
+} else {
+    UsageAccessStatus.MISSING
+}
