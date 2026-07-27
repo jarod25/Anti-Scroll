@@ -11,7 +11,5 @@ import javax.inject.Singleton
 abstract class MonitoringPermissionModule {
     @Binds
     @Singleton
-    abstract fun bindMonitoringPermissionReader(
-        reader: AndroidMonitoringPermissionReader
-    ): MonitoringPermissionReader
+    abstract fun bindMonitoringPermissionReader(reader: AndroidMonitoringPermissionReader): MonitoringPermissionReader
 }
