@@ -1,3 +1,25 @@
 <resources>
     <string name="app_name">Anti-Scroll</string>
+    <string name="permission_onboarding_title">Set up observation</string>
+    <string name="permission_onboarding_body">Anti-Scroll needs Android usage access to measure scrolling applications. This access is read-only and all observations stay on this device.</string>
+    <string name="usage_access_title">Usage access</string>
+    <string name="usage_access_granted">Granted</string>
+    <string name="usage_access_required">Required</string>
+    <string name="usage_access_unavailable">Unavailable</string>
+    <string name="usage_access_error">Status error</string>
+    <string name="usage_access_granted_description">Android allows Anti-Scroll to read usage history. The status is checked again whenever the application resumes.</string>
+    <string name="usage_access_required_description">Grant access in Android settings so Anti-Scroll can reconstruct application usage. Opening settings alone does not count as approval.</string>
+    <string name="usage_access_unavailable_description">This device does not expose the expected usage-access service. Observation cannot start until Android provides it.</string>
+    <string name="usage_access_error_description">Anti-Scroll could not read the current system state. You can review the setting and return to try again.</string>
+    <string name="open_usage_access_settings">Open usage access settings</string>
+    <string name="review_usage_access_settings">Review usage access settings</string>
+    <string name="settings_launch_error">Android could not open the usage-access settings screen on this device.</string>
+    <string name="accessibility_title">Accessibility monitoring</string>
+    <string name="accessibility_optional">Optional</string>
+    <string name="accessibility_disabled">Disabled</string>
+    <string name="accessibility_enabled">Enabled</string>
+    <string name="accessibility_disconnected">Disconnected</string>
+    <string name="accessibility_unsupported">Not available yet</string>
+    <string name="accessibility_error">Status error</string>
+    <string name="accessibility_description">A minimal accessibility experiment may later improve detection speed. It is not implemented in this increment and usage-history collection will not depend on it.</string>
 </resources>
