@@ -170,39 +170,44 @@ private data class UsageAccessPresentation(
     @StringRes val buttonRes: Int
 )
 
-private fun usageAccessPresentation(status: UsageAccessStatus): UsageAccessPresentation =
-    when (status) {
-        UsageAccessStatus.GRANTED -> UsageAccessPresentation(
-            statusRes = R.string.usage_access_granted,
-            descriptionRes = R.string.usage_access_granted_description,
-            buttonRes = R.string.review_usage_access_settings
-        )
-        UsageAccessStatus.MISSING -> UsageAccessPresentation(
-            statusRes = R.string.usage_access_required,
-            descriptionRes = R.string.usage_access_required_description,
-            buttonRes = R.string.open_usage_access_settings
-        )
-        UsageAccessStatus.UNAVAILABLE -> UsageAccessPresentation(
-            statusRes = R.string.usage_access_unavailable,
-            descriptionRes = R.string.usage_access_unavailable_description,
-            buttonRes = R.string.open_usage_access_settings
-        )
-        UsageAccessStatus.ERROR -> UsageAccessPresentation(
-            statusRes = R.string.usage_access_error,
-            descriptionRes = R.string.usage_access_error_description,
-            buttonRes = R.string.review_usage_access_settings
-        )
-    }
+private fun usageAccessPresentation(status: UsageAccessStatus): UsageAccessPresentation = when (status) {
+    UsageAccessStatus.GRANTED -> UsageAccessPresentation(
+        statusRes = R.string.usage_access_granted,
+        descriptionRes = R.string.usage_access_granted_description,
+        buttonRes = R.string.review_usage_access_settings
+    )
+
+    UsageAccessStatus.MISSING -> UsageAccessPresentation(
+        statusRes = R.string.usage_access_required,
+        descriptionRes = R.string.usage_access_required_description,
+        buttonRes = R.string.open_usage_access_settings
+    )
+
+    UsageAccessStatus.UNAVAILABLE -> UsageAccessPresentation(
+        statusRes = R.string.usage_access_unavailable,
+        descriptionRes = R.string.usage_access_unavailable_description,
+        buttonRes = R.string.open_usage_access_settings
+    )
+
+    UsageAccessStatus.ERROR -> UsageAccessPresentation(
+        statusRes = R.string.usage_access_error,
+        descriptionRes = R.string.usage_access_error_description,
+        buttonRes = R.string.review_usage_access_settings
+    )
+}
 
 @StringRes
-private fun accessibilityStatusRes(status: AccessibilityMonitoringStatus): Int =
-    when (status) {
-        AccessibilityMonitoringStatus.DISABLED -> R.string.accessibility_disabled
-        AccessibilityMonitoringStatus.ENABLED -> R.string.accessibility_enabled
-        AccessibilityMonitoringStatus.DISCONNECTED -> R.string.accessibility_disconnected
-        AccessibilityMonitoringStatus.UNSUPPORTED -> R.string.accessibility_unsupported
-        AccessibilityMonitoringStatus.ERROR -> R.string.accessibility_error
-    }
+private fun accessibilityStatusRes(status: AccessibilityMonitoringStatus): Int = when (status) {
+    AccessibilityMonitoringStatus.DISABLED -> R.string.accessibility_disabled
+
+    AccessibilityMonitoringStatus.ENABLED -> R.string.accessibility_enabled
+
+    AccessibilityMonitoringStatus.DISCONNECTED -> R.string.accessibility_disconnected
+
+    AccessibilityMonitoringStatus.UNSUPPORTED -> R.string.accessibility_unsupported
+
+    AccessibilityMonitoringStatus.ERROR -> R.string.accessibility_error
+}
 
 @Preview(showBackground = true)
 @Composable
