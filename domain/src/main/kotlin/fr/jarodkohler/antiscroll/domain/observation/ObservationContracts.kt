@@ -13,10 +13,7 @@ interface MonitoredApplicationRepository {
     suspend fun save(application: MonitoredApplication)
 }
 
-data class UsageEventAppendResult(
-    val insertedCount: Int,
-    val duplicateCount: Int
-) {
+data class UsageEventAppendResult(val insertedCount: Int, val duplicateCount: Int) {
     init {
         require(insertedCount >= 0) { "Inserted event count must not be negative" }
         require(duplicateCount >= 0) { "Duplicate event count must not be negative" }
@@ -55,8 +52,5 @@ interface ObservationStateRepository {
 interface UsageObservationSource {
     val source: UsageEventSource
 
-    suspend fun collect(
-        window: ObservationWindow,
-        packageNames: Set<ApplicationPackageName>
-    ): UsageCollectionResult
+    suspend fun collect(window: ObservationWindow, packageNames: Set<ApplicationPackageName>): UsageCollectionResult
 }
