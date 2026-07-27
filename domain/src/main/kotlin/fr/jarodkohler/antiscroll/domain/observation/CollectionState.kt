@@ -11,11 +11,7 @@ enum class CollectionGapReason {
     UNKNOWN
 }
 
-data class CollectionCheckpoint(
-    val source: UsageEventSource,
-    val reconciledThrough: Instant,
-    val updatedAt: Instant
-)
+data class CollectionCheckpoint(val source: UsageEventSource, val reconciledThrough: Instant, val updatedAt: Instant)
 
 data class CollectionGap(
     val source: UsageEventSource,
