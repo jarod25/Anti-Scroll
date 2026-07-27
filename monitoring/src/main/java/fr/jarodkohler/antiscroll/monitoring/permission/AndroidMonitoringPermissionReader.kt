@@ -12,7 +12,7 @@ import javax.inject.Singleton
 @Singleton
 class AndroidMonitoringPermissionReader
 @Inject
-constructor(@ApplicationContext private val context: Context) :
+constructor(@param:ApplicationContext private val context: Context) :
     MonitoringPermissionReader {
     override fun read(): MonitoringPermissionSnapshot = MonitoringPermissionSnapshot(
         usageAccessStatus = readUsageAccessStatus(),
