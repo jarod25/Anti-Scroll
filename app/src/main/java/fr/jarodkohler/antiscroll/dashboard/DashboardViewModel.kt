@@ -27,10 +27,7 @@ private data class DailyUsageSnapshot(
     val loadFailed: Boolean
 )
 
-private data class MonitoringHealthSnapshot(
-    val health: MonitoringHealth,
-    val loadFailed: Boolean
-)
+private data class MonitoringHealthSnapshot(val health: MonitoringHealth, val loadFailed: Boolean)
 
 data class DashboardUiState(
     val date: LocalDate,
