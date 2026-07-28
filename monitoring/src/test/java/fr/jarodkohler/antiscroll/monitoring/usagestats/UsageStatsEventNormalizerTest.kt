@@ -25,8 +25,7 @@ class UsageStatsEventNormalizerTest {
             packageName = tiktokPackage.value,
             eventType = UsageStatsActivityEventType.RESUMED,
             occurredAtEpochMillis = 3_000L,
-            activityClassName = "TikTokActivity",
-            instanceId = 7
+            activityClassName = "TikTokActivity"
         )
 
         val events = normalizer.normalize(
@@ -64,15 +63,14 @@ class UsageStatsEventNormalizerTest {
     }
 
     @Test
-    fun identifiersAreStableButKeepDistinctActivityInstances() {
+    fun identifiersAreStableButKeepDistinctActivityClasses() {
         val firstRecord = record(
             packageName = instagramPackage.value,
             eventType = UsageStatsActivityEventType.RESUMED,
             occurredAtEpochMillis = 2_000L,
-            activityClassName = "FeedActivity",
-            instanceId = 10
+            activityClassName = "FeedActivity"
         )
-        val secondRecord = firstRecord.copy(instanceId = 11)
+        val secondRecord = firstRecord.copy(activityClassName = "SettingsActivity")
 
         val firstPass = normalizer.normalize(
             records = listOf(firstRecord, secondRecord),
@@ -93,12 +91,10 @@ class UsageStatsEventNormalizerTest {
         packageName: String,
         eventType: UsageStatsActivityEventType,
         occurredAtEpochMillis: Long,
-        activityClassName: String? = null,
-        instanceId: Int = 0
+        activityClassName: String? = null
     ): UsageStatsEventRecord = UsageStatsEventRecord(
         packageName = packageName,
         activityClassName = activityClassName,
-        instanceId = instanceId,
         eventType = eventType,
         occurredAtEpochMillis = occurredAtEpochMillis
     )
