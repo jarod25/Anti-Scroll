@@ -3,10 +3,7 @@ package fr.jarodkohler.antiscroll.observation
 import fr.jarodkohler.antiscroll.engine.observation.ObservationReconciliationPolicy
 import java.time.Duration
 
-data class ObservationSchedulingPolicy(
-    val periodicInterval: Duration,
-    val retryBackoff: Duration
-) {
+data class ObservationSchedulingPolicy(val periodicInterval: Duration, val retryBackoff: Duration) {
     init {
         require(periodicInterval >= MINIMUM_PERIODIC_INTERVAL) {
             "Observation periodic interval must respect WorkManager's minimum interval"
