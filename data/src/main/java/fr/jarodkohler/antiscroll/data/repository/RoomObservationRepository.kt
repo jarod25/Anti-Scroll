@@ -72,6 +72,8 @@ class RoomObservationRepository @Inject constructor(private val database: AntiSc
         entity?.toDomain() ?: DEFAULT_MONITORING_HEALTH
     }
 
+    override suspend fun health(): MonitoringHealth = dao.findHealth()?.toDomain() ?: DEFAULT_MONITORING_HEALTH
+
     override suspend fun saveHealth(health: MonitoringHealth) {
         dao.upsertHealth(health.toEntity())
     }

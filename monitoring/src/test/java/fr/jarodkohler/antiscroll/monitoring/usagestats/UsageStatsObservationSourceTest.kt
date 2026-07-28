@@ -37,6 +37,20 @@ class UsageStatsObservationSourceTest {
     }
 
     @Test
+    fun missingUsageAccessIsReportedWithoutSelectedApplications() = runTest {
+        val gateway = FakeUsageStatsEventGateway(UsageStatsQueryResult.Events(emptyList()))
+        val source = source(UsageAccessStatus.MISSING, gateway)
+
+        val result = source.collect(window, emptySet())
+
+        assertEquals(0, gateway.queryCount)
+        assertEquals(
+            CollectionGapReason.USAGE_ACCESS_MISSING,
+            (result as UsageCollectionResult.Unavailable).reason
+        )
+    }
+
+    @Test
     fun lockedDeviceIsReportedAsUnavailable() = runTest {
         val source = source(
             UsageAccessStatus.GRANTED,

@@ -46,6 +46,8 @@ interface DailyUsageRepository {
 interface ObservationStateRepository {
     fun observeHealth(): Flow<MonitoringHealth>
 
+    suspend fun health(): MonitoringHealth
+
     suspend fun saveHealth(health: MonitoringHealth)
 
     suspend fun checkpoint(source: UsageEventSource): CollectionCheckpoint?

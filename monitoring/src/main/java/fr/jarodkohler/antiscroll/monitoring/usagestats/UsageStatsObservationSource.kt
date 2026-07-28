@@ -27,10 +27,6 @@ constructor(
         window: ObservationWindow,
         packageNames: Set<ApplicationPackageName>
     ): UsageCollectionResult {
-        if (packageNames.isEmpty()) {
-            return collected(window, emptyList())
-        }
-
         when (permissionReader.read().usageAccessStatus) {
             UsageAccessStatus.MISSING ->
                 return unavailable(
@@ -46,6 +42,10 @@ constructor(
                 )
 
             UsageAccessStatus.GRANTED -> Unit
+        }
+
+        if (packageNames.isEmpty()) {
+            return collected(window, emptyList())
         }
 
         return when (val queryResult = eventGateway.query(window, packageNames)) {
