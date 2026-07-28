@@ -8,8 +8,8 @@ import fr.jarodkohler.antiscroll.domain.observation.AccessibilityMonitoringStatu
 import fr.jarodkohler.antiscroll.domain.observation.CollectionStatus
 import fr.jarodkohler.antiscroll.domain.observation.DailyApplicationUsage
 import fr.jarodkohler.antiscroll.domain.observation.DailyUsageRepository
-import fr.jarodkohler.antiscroll.domain.observation.MonitoringHealth
 import fr.jarodkohler.antiscroll.domain.observation.MonitoredApplicationRepository
+import fr.jarodkohler.antiscroll.domain.observation.MonitoringHealth
 import fr.jarodkohler.antiscroll.domain.observation.ObservationBaseline
 import fr.jarodkohler.antiscroll.domain.observation.ObservationStateRepository
 import fr.jarodkohler.antiscroll.domain.observation.UsageAccessStatus
@@ -35,10 +35,7 @@ private data class DailyUsageSnapshot(
 
 private data class MonitoringHealthSnapshot(val health: MonitoringHealth, val loadFailed: Boolean)
 
-private data class MonitoredApplicationsSnapshot(
-    val applications: List<MonitoredApplication>,
-    val loadFailed: Boolean
-)
+private data class MonitoredApplicationsSnapshot(val applications: List<MonitoredApplication>, val loadFailed: Boolean)
 
 private data class BaselineRequest(
     val currentDate: LocalDate,
@@ -46,10 +43,7 @@ private data class BaselineRequest(
     val loadFailed: Boolean
 )
 
-private data class BaselineSnapshot(
-    val baseline: ObservationBaseline?,
-    val loadFailed: Boolean
-)
+private data class BaselineSnapshot(val baseline: ObservationBaseline?, val loadFailed: Boolean)
 
 data class DashboardUiState(
     val date: LocalDate,
