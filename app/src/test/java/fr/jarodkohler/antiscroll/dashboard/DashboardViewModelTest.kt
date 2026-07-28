@@ -9,8 +9,8 @@ import fr.jarodkohler.antiscroll.domain.observation.CollectionStatus
 import fr.jarodkohler.antiscroll.domain.observation.DailyApplicationUsage
 import fr.jarodkohler.antiscroll.domain.observation.DailyUsageRepository
 import fr.jarodkohler.antiscroll.domain.observation.DataCompleteness
-import fr.jarodkohler.antiscroll.domain.observation.MonitoringHealth
 import fr.jarodkohler.antiscroll.domain.observation.MonitoredApplicationRepository
+import fr.jarodkohler.antiscroll.domain.observation.MonitoringHealth
 import fr.jarodkohler.antiscroll.domain.observation.ObservationBaselineStatus
 import fr.jarodkohler.antiscroll.domain.observation.ObservationStateRepository
 import fr.jarodkohler.antiscroll.domain.observation.ObservationWindow
@@ -107,21 +107,16 @@ private class FakeDailyUsageRepository(usage: List<DailyApplicationUsage>) : Dai
     override fun observe(date: LocalDate): Flow<List<DailyApplicationUsage>> =
         flowOf(usage.value.filter { item -> item.date == date })
 
-    override fun observeRange(
-        fromInclusive: LocalDate,
-        toInclusive: LocalDate
-    ): Flow<List<DailyApplicationUsage>> = flowOf(
-        usage.value.filter { item -> item.date in fromInclusive..toInclusive }
-    )
+    override fun observeRange(fromInclusive: LocalDate, toInclusive: LocalDate): Flow<List<DailyApplicationUsage>> =
+        flowOf(usage.value.filter { item -> item.date in fromInclusive..toInclusive })
 
     override suspend fun replace(date: LocalDate, usage: List<DailyApplicationUsage>) {
         this.usage.value = this.usage.value.filterNot { item -> item.date == date } + usage
     }
 }
 
-private class FakeMonitoredApplicationRepository(
-    applications: List<MonitoredApplication>
-) : MonitoredApplicationRepository {
+private class FakeMonitoredApplicationRepository(applications: List<MonitoredApplication>) :
+    MonitoredApplicationRepository {
     private val applications = MutableStateFlow(applications)
 
     override fun observeAll(): Flow<List<MonitoredApplication>> = applications
@@ -132,7 +127,8 @@ private class FakeMonitoredApplicationRepository(
         applications.value.filter(MonitoredApplication::isEnabled)
 
     override suspend fun save(application: MonitoredApplication) {
-        applications.value = applications.value.filterNot { item -> item.packageName == application.packageName } + application
+        applications.value =
+            applications.value.filterNot { item -> item.packageName == application.packageName } + application
     }
 }
 
