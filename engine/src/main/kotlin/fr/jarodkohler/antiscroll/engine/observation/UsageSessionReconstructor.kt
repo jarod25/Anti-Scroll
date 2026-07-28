@@ -33,7 +33,7 @@ class UsageSessionReconstructor(private val policy: UsageSessionReconstructionPo
                     eventBeforeWindow.packageName == packageName &&
                         eventBeforeWindow.source == policy.source &&
                         eventBeforeWindow.occurredAt < window.startInclusive
-                )
+                    )
         ) {
             "Session seed event must match the package, source and requested window"
         }
@@ -121,8 +121,11 @@ class UsageSessionReconstructor(private val policy: UsageSessionReconstructionPo
                         }
 
                         activityClassName == null -> Unit
+
                         activeActivities.remove(activityClassName) -> Unit
+
                         activeActivities.isNotEmpty() -> Unit
+
                         anonymousActivityActive -> anonymousActivityActive = false
                     }
 
