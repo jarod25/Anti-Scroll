@@ -97,7 +97,14 @@ class DashboardScreenTest {
         composeRule.setContent {
             AntiScrollTheme {
                 DashboardScreen(
-                    uiState = DashboardUiState(date = LocalDate.of(2026, 7, 28)),
+                    uiState = DashboardUiState(
+                        date = LocalDate.of(2026, 7, 28),
+                        observationBaseline = ObservationBaseline(
+                            status = ObservationBaselineStatus.NOT_STARTED,
+                            requiredReliableDays = 7,
+                            reliableDayCount = 0
+                        )
+                    ),
                     applications = emptyList(),
                     onRefresh = {}
                 )
