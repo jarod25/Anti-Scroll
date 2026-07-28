@@ -37,11 +37,3 @@ interface UsageStatsEventGateway {
         packageNames: Set<ApplicationPackageName>
     ): UsageStatsQueryResult
 }
-
-internal enum class UsageStatsQueryMode {
-    FILTERED,
-    LEGACY
-}
-
-internal fun usageStatsQueryModeForApi(sdkInt: Int): UsageStatsQueryMode =
-    if (sdkInt >= 35) UsageStatsQueryMode.FILTERED else UsageStatsQueryMode.LEGACY
