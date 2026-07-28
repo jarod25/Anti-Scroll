@@ -74,7 +74,6 @@ class UsageStatsObservationSourceTest {
                         UsageStatsEventRecord(
                             packageName = packageName.value,
                             activityClassName = "FeedActivity",
-                            instanceId = 2,
                             eventType = UsageStatsActivityEventType.RESUMED,
                             occurredAtEpochMillis = 2_000L
                         )
