@@ -80,10 +80,7 @@ class DashboardViewModelTest {
     }
 }
 
-private class FakeDailyUsageRepository(
-    date: LocalDate,
-    usage: List<DailyApplicationUsage>
-) : DailyUsageRepository {
+private class FakeDailyUsageRepository(date: LocalDate, usage: List<DailyApplicationUsage>) : DailyUsageRepository {
     private val usageByDate = mutableMapOf(date to MutableStateFlow(usage))
 
     override fun observe(date: LocalDate): Flow<List<DailyApplicationUsage>> =
