@@ -103,10 +103,7 @@ class DailyUsageProjectionCoordinator(
     }
 }
 
-data class DailyUsageProjectionReport(
-    val rebuiltDates: Set<LocalDate>,
-    val projectedRowCount: Int
-) {
+data class DailyUsageProjectionReport(val rebuiltDates: Set<LocalDate>, val projectedRowCount: Int) {
     init {
         require(projectedRowCount >= 0) { "Projected usage row count must not be negative" }
     }
