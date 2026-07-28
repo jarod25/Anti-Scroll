@@ -41,18 +41,12 @@ interface ObservationDao {
         ORDER BY start_inclusive_epoch_millis, gap_id
         """
     )
-    fun observeGaps(
-        startInclusiveEpochMillis: Long,
-        endExclusiveEpochMillis: Long
-    ): Flow<List<CollectionGapEntity>>
+    fun observeGaps(startInclusiveEpochMillis: Long, endExclusiveEpochMillis: Long): Flow<List<CollectionGapEntity>>
 
     @Insert
     suspend fun insertGap(gap: CollectionGapEntity)
 
-    @Query(
-        "SELECT * FROM monitoring_health " +
-            "WHERE singleton_id = ${MonitoringHealthEntity.SINGLETON_ID} LIMIT 1"
-    )
+    @Query("SELECT * FROM monitoring_health WHERE singleton_id = 1 LIMIT 1")
     fun observeHealth(): Flow<MonitoringHealthEntity?>
 
     @Upsert
