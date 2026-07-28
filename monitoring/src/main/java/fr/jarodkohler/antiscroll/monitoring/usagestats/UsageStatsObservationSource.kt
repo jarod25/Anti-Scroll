@@ -78,21 +78,19 @@ constructor(
     private fun collected(
         window: ObservationWindow,
         events: List<NormalizedUsageEvent>
-    ): UsageCollectionResult.Collected =
-        UsageCollectionResult.Collected(
-            source = source,
-            window = window,
-            events = events,
-            completeness = DataCompleteness.COMPLETE
-        )
+    ): UsageCollectionResult.Collected = UsageCollectionResult.Collected(
+        source = source,
+        window = window,
+        events = events,
+        completeness = DataCompleteness.COMPLETE
+    )
 
     private fun unavailable(
         window: ObservationWindow,
         reason: CollectionGapReason
-    ): UsageCollectionResult.Unavailable =
-        UsageCollectionResult.Unavailable(
-            source = source,
-            window = window,
-            reason = reason
-        )
+    ): UsageCollectionResult.Unavailable = UsageCollectionResult.Unavailable(
+        source = source,
+        window = window,
+        reason = reason
+    )
 }
