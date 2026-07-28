@@ -107,10 +107,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun setApplicationEnabled(
-        packageName: ApplicationPackageName,
-        isEnabled: Boolean
-    ) {
+    fun setApplicationEnabled(packageName: ApplicationPackageName, isEnabled: Boolean) {
         val previous = persistedApplications[packageName]
         val updated = MonitoredApplication(
             packageName = packageName,
