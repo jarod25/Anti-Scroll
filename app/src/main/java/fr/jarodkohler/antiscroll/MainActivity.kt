@@ -16,15 +16,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
+import fr.jarodkohler.antiscroll.observation.ObservationWorkScheduler
 import fr.jarodkohler.antiscroll.ui.theme.AntiScrollTheme
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
     private var settingsLaunchFailed by mutableStateOf(false)
 
+    @Inject
+    lateinit var observationWorkScheduler: ObservationWorkScheduler
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        observationWorkScheduler.ensurePeriodicReconciliation()
         enableEdgeToEdge()
         setContent {
             val uiState by viewModel.uiState.collectAsState()
@@ -46,6 +52,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        observationWorkScheduler.requestImmediateReconciliation()
         settingsLaunchFailed = false
         viewModel.refresh()
     }
