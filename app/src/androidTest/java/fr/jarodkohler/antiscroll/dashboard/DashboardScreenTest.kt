@@ -70,6 +70,7 @@ class DashboardScreenTest {
         composeRule.onNodeWithTag(DashboardTestTags.SUMMARY).assertIsDisplayed()
         composeRule.onNodeWithTag(DashboardTestTags.HEALTH).assertIsDisplayed()
         composeRule.onNodeWithText("1m 6s").assertIsDisplayed()
+        composeRule.onNodeWithText("1m 6s • 1 opening").assertIsDisplayed()
         composeRule.onNodeWithText("TikTok").assertIsDisplayed()
         composeRule.onNodeWithText("Partial").assertIsDisplayed()
         composeRule.onNodeWithText("Some usage may be missing").assertIsDisplayed()
