@@ -86,7 +86,10 @@ class UsageStatsEventNormalizerTest {
 
         assertEquals(firstPass.map { event -> event.id }, secondPass.map { event -> event.id })
         assertNotEquals(firstPass[0].id, firstPass[1].id)
-        assertEquals(setOf("FeedActivity", "SettingsActivity"), firstPass.mapTo(mutableSetOf()) { it.activityClassName })
+        assertEquals(
+            setOf("FeedActivity", "SettingsActivity"),
+            firstPass.mapTo(mutableSetOf()) { event -> event.activityClassName }
+        )
     }
 
     private fun record(
