@@ -270,15 +270,13 @@ private class FakeDailyUsageRepository : DailyUsageRepository {
 
     override fun observe(date: LocalDate): Flow<List<DailyApplicationUsage>> = flowOf(replacements[date].orEmpty())
 
-    override fun observeRange(
-        fromInclusive: LocalDate,
-        toInclusive: LocalDate
-    ): Flow<List<DailyApplicationUsage>> = flowOf(
-        replacements
-            .filterKeys { date -> date in fromInclusive..toInclusive }
-            .values
-            .flatten()
-    )
+    override fun observeRange(fromInclusive: LocalDate, toInclusive: LocalDate): Flow<List<DailyApplicationUsage>> =
+        flowOf(
+            replacements
+                .filterKeys { date -> date in fromInclusive..toInclusive }
+                .values
+                .flatten()
+        )
 
     override suspend fun replace(date: LocalDate, usage: List<DailyApplicationUsage>) {
         replacements[date] = usage
