@@ -31,9 +31,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 @Singleton
-class RoomObservationRepository @Inject constructor(
-    private val database: AntiScrollDatabase
-) : UsageEventRepository, ObservationStateRepository, ObservationCommitRepository {
+class RoomObservationRepository @Inject constructor(private val database: AntiScrollDatabase) :
+    UsageEventRepository,
+    ObservationStateRepository,
+    ObservationCommitRepository {
     private val dao = database.observationDao()
 
     override suspend fun append(events: Collection<NormalizedUsageEvent>): UsageEventAppendResult =
@@ -82,10 +83,11 @@ class RoomObservationRepository @Inject constructor(
         dao.upsertCheckpoint(checkpoint.toEntity())
     }
 
-    override fun observeGaps(window: ObservationWindow): Flow<List<CollectionGap>> = dao.observeGaps(
-        startInclusiveEpochMillis = window.startInclusive.toEpochMilli(),
-        endExclusiveEpochMillis = window.endExclusive.toEpochMilli()
-    ).map { entities -> entities.map(CollectionGapEntity::toDomain) }
+    override fun observeGaps(window: ObservationWindow): Flow<List<CollectionGap>> =
+        dao.observeGaps(
+            startInclusiveEpochMillis = window.startInclusive.toEpochMilli(),
+            endExclusiveEpochMillis = window.endExclusive.toEpochMilli()
+        ).map { entities -> entities.map(CollectionGapEntity::toDomain) }
 
     override suspend fun recordGap(gap: CollectionGap) {
         dao.insertGap(gap.toEntity())
