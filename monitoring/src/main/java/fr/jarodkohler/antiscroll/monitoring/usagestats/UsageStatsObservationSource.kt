@@ -85,12 +85,10 @@ constructor(
         completeness = DataCompleteness.COMPLETE
     )
 
-    private fun unavailable(
-        window: ObservationWindow,
-        reason: CollectionGapReason
-    ): UsageCollectionResult.Unavailable = UsageCollectionResult.Unavailable(
-        source = source,
-        window = window,
-        reason = reason
-    )
+    private fun unavailable(window: ObservationWindow, reason: CollectionGapReason): UsageCollectionResult.Unavailable =
+        UsageCollectionResult.Unavailable(
+            source = source,
+            window = window,
+            reason = reason
+        )
 }
