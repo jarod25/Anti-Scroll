@@ -7,6 +7,7 @@ import androidx.work.Data
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import fr.jarodkohler.antiscroll.engine.observation.DailyUsageProjectionCoordinator
 import fr.jarodkohler.antiscroll.engine.observation.ObservationReconciliationCoordinator
 
 @HiltWorker
@@ -15,20 +16,27 @@ class ObservationReconciliationWorker
 constructor(
     @Assisted appContext: Context,
     @Assisted workerParameters: WorkerParameters,
-    private val coordinator: ObservationReconciliationCoordinator
+    private val reconciliationCoordinator: ObservationReconciliationCoordinator,
+    private val projectionCoordinator: DailyUsageProjectionCoordinator
 ) : CoroutineWorker(appContext, workerParameters) {
     override suspend fun doWork(): Result = runCatching {
-        coordinator.reconcile()
+        val reconciliationReport = reconciliationCoordinator.reconcile()
+        val projectionReport = projectionCoordinator.rebuild(reconciliationReport)
+        reconciliationReport to projectionReport
     }.fold(
-        onSuccess = { report ->
-            if (report.shouldRetry) {
+        onSuccess = { (reconciliationReport, projectionReport) ->
+            if (reconciliationReport.shouldRetry) {
                 Result.retry()
             } else {
                 Result.success(
                     Data.Builder()
-                        .putInt(OUTPUT_INSERTED_EVENT_COUNT, report.insertedEventCount)
-                        .putInt(OUTPUT_DUPLICATE_EVENT_COUNT, report.duplicateEventCount)
-                        .putString(OUTPUT_COLLECTION_STATUS, report.health.collectionStatus.name)
+                        .putInt(OUTPUT_INSERTED_EVENT_COUNT, reconciliationReport.insertedEventCount)
+                        .putInt(OUTPUT_DUPLICATE_EVENT_COUNT, reconciliationReport.duplicateEventCount)
+                        .putString(
+                            OUTPUT_COLLECTION_STATUS,
+                            reconciliationReport.health.collectionStatus.name
+                        ).putInt(OUTPUT_REBUILT_DATE_COUNT, projectionReport.rebuiltDates.size)
+                        .putInt(OUTPUT_PROJECTED_ROW_COUNT, projectionReport.projectedRowCount)
                         .build()
                 )
             }
@@ -42,5 +50,7 @@ constructor(
         const val OUTPUT_INSERTED_EVENT_COUNT = "inserted_event_count"
         const val OUTPUT_DUPLICATE_EVENT_COUNT = "duplicate_event_count"
         const val OUTPUT_COLLECTION_STATUS = "collection_status"
+        const val OUTPUT_REBUILT_DATE_COUNT = "rebuilt_date_count"
+        const val OUTPUT_PROJECTED_ROW_COUNT = "projected_row_count"
     }
 }
