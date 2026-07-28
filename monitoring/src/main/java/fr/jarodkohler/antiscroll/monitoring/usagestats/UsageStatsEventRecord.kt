@@ -32,8 +32,5 @@ sealed interface UsageStatsQueryResult {
 }
 
 interface UsageStatsEventGateway {
-    suspend fun query(
-        window: ObservationWindow,
-        packageNames: Set<ApplicationPackageName>
-    ): UsageStatsQueryResult
+    suspend fun query(window: ObservationWindow, packageNames: Set<ApplicationPackageName>): UsageStatsQueryResult
 }
