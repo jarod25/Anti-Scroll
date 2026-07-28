@@ -18,7 +18,8 @@ import kotlinx.coroutines.withContext
 @Singleton
 class AndroidUsageStatsEventGateway
 @Inject
-constructor(@param:ApplicationContext private val context: Context) : UsageStatsEventGateway {
+constructor(@param:ApplicationContext private val context: Context) :
+    UsageStatsEventGateway {
     override suspend fun query(
         window: ObservationWindow,
         packageNames: Set<ApplicationPackageName>
@@ -55,12 +56,15 @@ constructor(@param:ApplicationContext private val context: Context) : UsageStats
         usageStatsManager: UsageStatsManager,
         window: ObservationWindow,
         packageNames: Set<ApplicationPackageName>
-    ): UsageEvents? = when (usageStatsQueryModeForApi(Build.VERSION.SDK_INT)) {
-        UsageStatsQueryMode.FILTERED -> queryFiltered(usageStatsManager, window, packageNames)
-        UsageStatsQueryMode.LEGACY -> usageStatsManager.queryEvents(
-            window.startInclusive.toEpochMilli(),
-            window.endExclusive.toEpochMilli()
-        )
+    ): UsageEvents? {
+        return if (Build.VERSION.SDK_INT >= 35) {
+            queryFiltered(usageStatsManager, window, packageNames)
+        } else {
+            usageStatsManager.queryEvents(
+                window.startInclusive.toEpochMilli(),
+                window.endExclusive.toEpochMilli()
+            )
+        }
     }
 
     @RequiresApi(35)
@@ -109,9 +113,8 @@ constructor(@param:ApplicationContext private val context: Context) : UsageStats
     }
 }
 
-private fun Int.toActivityEventType(): UsageStatsActivityEventType? =
-    when (this) {
-        UsageEvents.Event.ACTIVITY_RESUMED -> UsageStatsActivityEventType.RESUMED
-        UsageEvents.Event.ACTIVITY_PAUSED -> UsageStatsActivityEventType.PAUSED
-        else -> null
-    }
+private fun Int.toActivityEventType(): UsageStatsActivityEventType? = when (this) {
+    UsageEvents.Event.ACTIVITY_RESUMED -> UsageStatsActivityEventType.RESUMED
+    UsageEvents.Event.ACTIVITY_PAUSED -> UsageStatsActivityEventType.PAUSED
+    else -> null
+}
