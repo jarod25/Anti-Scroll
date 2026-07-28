@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
+import fr.jarodkohler.antiscroll.dashboard.DashboardViewModel
 import fr.jarodkohler.antiscroll.observation.ObservationWorkScheduler
 import fr.jarodkohler.antiscroll.ui.theme.AntiScrollTheme
 import javax.inject.Inject
@@ -23,6 +24,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
+    private val dashboardViewModel: DashboardViewModel by viewModels()
     private var settingsLaunchFailed by mutableStateOf(false)
 
     @Inject
@@ -34,15 +36,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val uiState by viewModel.uiState.collectAsState()
+            val dashboardUiState by dashboardViewModel.uiState.collectAsState()
 
             AntiScrollTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AntiScrollApp(
                         uiState = uiState,
+                        dashboardUiState = dashboardUiState,
                         settingsLaunchFailed = settingsLaunchFailed,
                         onOpenUsageAccessSettings = ::openUsageAccessSettings,
                         onSetApplicationEnabled = viewModel::setApplicationEnabled,
                         onRetryApplications = viewModel::refresh,
+                        onRefreshDashboard = ::refreshObservation,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -55,6 +60,13 @@ class MainActivity : ComponentActivity() {
         observationWorkScheduler.requestImmediateReconciliation()
         settingsLaunchFailed = false
         viewModel.refresh()
+        dashboardViewModel.refreshDate()
+    }
+
+    private fun refreshObservation() {
+        observationWorkScheduler.requestImmediateReconciliation()
+        viewModel.refresh()
+        dashboardViewModel.refreshDate()
     }
 
     private fun openUsageAccessSettings() {
