@@ -142,14 +142,11 @@ class ObservationReconciliationCoordinator(
             observationStateRepository.checkpoint(source.source)
         }.getOrElse {
             val window = initialWindow(now)
-            persistGap(source.source, window, CollectionGapReason.PERSISTENCE_FAILURE, now)
-            return SourceReconciliationOutcome(
+            return persistenceFailureOutcome(
                 source = source.source,
                 window = window,
-                status = SourceReconciliationStatus.PERSISTENCE_FAILED,
-                failureReason = CollectionGapReason.PERSISTENCE_FAILURE,
-                diagnosticsPersisted = false,
-                shouldRetry = true
+                now = now,
+                usageAccessStatus = null
             )
         }
         val window = windowFor(checkpoint, now)
@@ -190,72 +187,66 @@ class ObservationReconciliationCoordinator(
     private suspend fun reconcileCollected(
         result: UsageCollectionResult.Collected,
         now: Instant
-    ): SourceReconciliationOutcome = when (result.completeness) {
-        DataCompleteness.COMPLETE -> {
-            val appendResult = runCatching {
-                observationCommitRepository.appendAndCheckpoint(
-                    events = result.events,
-                    checkpoint = CollectionCheckpoint(
-                        source = result.source,
-                        reconciledThrough = result.window.endExclusive,
-                        updatedAt = now
+    ): SourceReconciliationOutcome {
+        return when (result.completeness) {
+            DataCompleteness.COMPLETE -> {
+                val appendResult = runCatching {
+                    observationCommitRepository.appendAndCheckpoint(
+                        events = result.events,
+                        checkpoint = CollectionCheckpoint(
+                            source = result.source,
+                            reconciledThrough = result.window.endExclusive,
+                            updatedAt = now
+                        )
                     )
-                )
-            }.getOrElse {
-                persistGap(result.source, result.window, CollectionGapReason.PERSISTENCE_FAILURE, now)
-                return SourceReconciliationOutcome(
+                }.getOrElse {
+                    return persistenceFailureOutcome(
+                        source = result.source,
+                        window = result.window,
+                        now = now,
+                        usageAccessStatus = result.source.collectedUsageAccessStatus()
+                    )
+                }
+
+                SourceReconciliationOutcome(
                     source = result.source,
                     window = result.window,
-                    status = SourceReconciliationStatus.PERSISTENCE_FAILED,
-                    failureReason = CollectionGapReason.PERSISTENCE_FAILURE,
-                    usageAccessStatus = result.source.collectedUsageAccessStatus(),
-                    diagnosticsPersisted = false,
-                    shouldRetry = true
+                    status = SourceReconciliationStatus.COMPLETE,
+                    insertedEventCount = appendResult.insertedCount,
+                    duplicateEventCount = appendResult.duplicateCount,
+                    usageAccessStatus = result.source.collectedUsageAccessStatus()
                 )
             }
 
-            SourceReconciliationOutcome(
-                source = result.source,
-                window = result.window,
-                status = SourceReconciliationStatus.COMPLETE,
-                insertedEventCount = appendResult.insertedCount,
-                duplicateEventCount = appendResult.duplicateCount,
-                usageAccessStatus = result.source.collectedUsageAccessStatus()
-            )
-        }
+            DataCompleteness.PARTIAL -> {
+                val reason = requireNotNull(result.incompleteReason)
+                val appendResult = runCatching {
+                    usageEventRepository.append(result.events)
+                }.getOrElse {
+                    return persistenceFailureOutcome(
+                        source = result.source,
+                        window = result.window,
+                        now = now,
+                        usageAccessStatus = result.source.collectedUsageAccessStatus()
+                    )
+                }
+                val gapPersisted = persistGap(result.source, result.window, reason, now)
 
-        DataCompleteness.PARTIAL -> {
-            val reason = requireNotNull(result.incompleteReason)
-            val appendResult = runCatching {
-                usageEventRepository.append(result.events)
-            }.getOrElse {
-                persistGap(result.source, result.window, CollectionGapReason.PERSISTENCE_FAILURE, now)
-                return SourceReconciliationOutcome(
+                SourceReconciliationOutcome(
                     source = result.source,
                     window = result.window,
-                    status = SourceReconciliationStatus.PERSISTENCE_FAILED,
-                    failureReason = CollectionGapReason.PERSISTENCE_FAILURE,
+                    status = SourceReconciliationStatus.PARTIAL,
+                    insertedEventCount = appendResult.insertedCount,
+                    duplicateEventCount = appendResult.duplicateCount,
+                    failureReason = reason,
                     usageAccessStatus = result.source.collectedUsageAccessStatus(),
-                    diagnosticsPersisted = false,
-                    shouldRetry = true
+                    diagnosticsPersisted = gapPersisted,
+                    shouldRetry = !gapPersisted || reason.isRetryable()
                 )
             }
-            val gapPersisted = persistGap(result.source, result.window, reason, now)
 
-            SourceReconciliationOutcome(
-                source = result.source,
-                window = result.window,
-                status = SourceReconciliationStatus.PARTIAL,
-                insertedEventCount = appendResult.insertedCount,
-                duplicateEventCount = appendResult.duplicateCount,
-                failureReason = reason,
-                usageAccessStatus = result.source.collectedUsageAccessStatus(),
-                diagnosticsPersisted = gapPersisted,
-                shouldRetry = !gapPersisted || reason.isRetryable()
-            )
+            DataCompleteness.UNKNOWN -> error("Collected usage cannot have unknown completeness")
         }
-
-        DataCompleteness.UNKNOWN -> error("Collected usage cannot have unknown completeness")
     }
 
     private suspend fun reconcileUnavailable(
@@ -271,6 +262,24 @@ class ObservationReconciliationCoordinator(
             usageAccessStatus = result.source.unavailableUsageAccessStatus(result.reason),
             diagnosticsPersisted = gapPersisted,
             shouldRetry = !gapPersisted || result.reason.isRetryable()
+        )
+    }
+
+    private suspend fun persistenceFailureOutcome(
+        source: UsageEventSource,
+        window: ObservationWindow,
+        now: Instant,
+        usageAccessStatus: UsageAccessStatus?
+    ): SourceReconciliationOutcome {
+        val gapPersisted = persistGap(source, window, CollectionGapReason.PERSISTENCE_FAILURE, now)
+        return SourceReconciliationOutcome(
+            source = source,
+            window = window,
+            status = SourceReconciliationStatus.PERSISTENCE_FAILED,
+            failureReason = CollectionGapReason.PERSISTENCE_FAILURE,
+            usageAccessStatus = usageAccessStatus,
+            diagnosticsPersisted = gapPersisted,
+            shouldRetry = true
         )
     }
 
@@ -310,7 +319,7 @@ class ObservationReconciliationCoordinator(
         endExclusive = now
     )
 
-    private suspend fun persistenceUnavailableReport(now: Instant): ObservationReconciliationReport {
+    private fun persistenceUnavailableReport(now: Instant): ObservationReconciliationReport {
         val health = DEFAULT_HEALTH.copy(collectionStatus = CollectionStatus.DEGRADED)
         return ObservationReconciliationReport(
             completedAt = now,
