@@ -123,8 +123,7 @@ internal fun Duration.formatDashboardDuration(): String {
     }
 }
 
-internal fun LocalDate.formatForDashboard(): String =
-    format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL))
+internal fun LocalDate.formatForDashboard(): String = format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL))
 
 internal fun Instant.formatTimeForDashboard(): String = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
     .withZone(ZoneId.systemDefault())
