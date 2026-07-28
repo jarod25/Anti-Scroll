@@ -2,6 +2,7 @@ package fr.jarodkohler.antiscroll.observation
 
 import android.content.Context
 import androidx.work.BackoffPolicy
+import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
@@ -28,20 +29,24 @@ constructor(
     private val workManager = WorkManager.getInstance(context)
 
     override fun ensurePeriodicReconciliation() {
+        val constraints = Constraints.Builder()
+            .setRequiresBatteryNotLow(policy.requiresBatteryNotLow)
+            .build()
         val request = PeriodicWorkRequest.Builder(
             ObservationReconciliationWorker::class.java,
             policy.periodicInterval.toMinutes(),
             TimeUnit.MINUTES
-        ).setBackoffCriteria(
-            BackoffPolicy.EXPONENTIAL,
-            policy.retryBackoff.toMillis(),
-            TimeUnit.MILLISECONDS
-        ).addTag(PERIODIC_TAG)
+        ).setConstraints(constraints)
+            .setBackoffCriteria(
+                BackoffPolicy.EXPONENTIAL,
+                policy.retryBackoff.toMillis(),
+                TimeUnit.MILLISECONDS
+            ).addTag(PERIODIC_TAG)
             .build()
 
         workManager.enqueueUniquePeriodicWork(
             PERIODIC_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             request
         )
     }
