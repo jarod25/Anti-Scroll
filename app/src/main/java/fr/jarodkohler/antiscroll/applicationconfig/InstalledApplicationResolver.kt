@@ -8,41 +8,36 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
 import dagger.hilt.android.qualifiers.ApplicationContext
+import fr.jarodkohler.antiscroll.domain.application.ApplicationPackageName
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 data class InstalledApplicationPresentation(
-    val packageName: fr.jarodkohler.antiscroll.domain.application.ApplicationPackageName,
+    val packageName: ApplicationPackageName,
     val label: String,
     val icon: ImageBitmap?
 )
 
 interface InstalledApplicationResolver {
-    suspend fun resolveInstalled(
-        catalog: List<SupportedApplication>
-    ): List<InstalledApplicationPresentation>
+    suspend fun resolveInstalled(catalog: List<SupportedApplication>): List<InstalledApplicationPresentation>
 }
 
 @Singleton
-class AndroidInstalledApplicationResolver @Inject constructor(
-    @param:ApplicationContext private val context: Context
-) : InstalledApplicationResolver {
+class AndroidInstalledApplicationResolver @Inject constructor(@param:ApplicationContext private val context: Context) :
+    InstalledApplicationResolver {
     private val packageManager = context.packageManager
 
-    override suspend fun resolveInstalled(
-        catalog: List<SupportedApplication>
-    ): List<InstalledApplicationPresentation> = withContext(Dispatchers.IO) {
-        catalog.mapNotNull(::resolveInstalledApplication)
-            .sortedWith(
-                compareBy(String.CASE_INSENSITIVE_ORDER) { application -> application.label }
-            )
-    }
+    override suspend fun resolveInstalled(catalog: List<SupportedApplication>): List<InstalledApplicationPresentation> =
+        withContext(Dispatchers.IO) {
+            catalog.mapNotNull(::resolveInstalledApplication)
+                .sortedWith(
+                    compareBy(String.CASE_INSENSITIVE_ORDER) { application -> application.label }
+                )
+        }
 
-    private fun resolveInstalledApplication(
-        supportedApplication: SupportedApplication
-    ): InstalledApplicationPresentation? {
+    private fun resolveInstalledApplication(supportedApplication: SupportedApplication): InstalledApplicationPresentation? {
         val applicationInfo = runCatching {
             applicationInfo(supportedApplication.packageName.value)
         }.getOrNull() ?: return null
