@@ -70,15 +70,12 @@ class RoomDailyUsageRepositoryInstrumentedTest {
         }
     }
 
-    private fun usage(
-        date: LocalDate,
-        packageName: String,
-        foregroundDurationMillis: Long
-    ): DailyApplicationUsage = DailyApplicationUsage(
-        date = date,
-        packageName = ApplicationPackageName(packageName),
-        foregroundDuration = Duration.ofMillis(foregroundDurationMillis),
-        estimatedOpeningCount = 2,
-        completeness = DataCompleteness.COMPLETE
-    )
+    private fun usage(date: LocalDate, packageName: String, foregroundDurationMillis: Long): DailyApplicationUsage =
+        DailyApplicationUsage(
+            date = date,
+            packageName = ApplicationPackageName(packageName),
+            foregroundDuration = Duration.ofMillis(foregroundDurationMillis),
+            estimatedOpeningCount = 2,
+            completeness = DataCompleteness.COMPLETE
+        )
 }
