@@ -36,7 +36,10 @@
     <string name="dashboard_applications_title">Monitored applications</string>
     <string name="dashboard_empty">No monitored applications yet. Open the Apps tab to choose what Anti-Scroll should observe.</string>
     <string name="dashboard_load_error">Anti-Scroll could not read the latest local statistics. Try refreshing the observation.</string>
-    <string name="dashboard_application_summary">%1$s • %2$d openings</string>
+    <plurals name="dashboard_application_summary">
+        <item quantity="one">%1$s • %2$d opening</item>
+        <item quantity="other">%1$s • %2$d openings</item>
+    </plurals>
     <string name="dashboard_last_updated">Last successful update: %1$s</string>
     <string name="dashboard_health_not_started_title">Waiting for the first observation</string>
     <string name="dashboard_health_not_started_body">Use a monitored application, then return to Anti-Scroll to generate the first statistics.</string>
