@@ -21,10 +21,7 @@ abstract class DailyUsageDao {
     protected abstract suspend fun upsertAll(usage: List<DailyApplicationUsageEntity>)
 
     @Transaction
-    open suspend fun replaceForDate(
-        dateEpochDay: Long,
-        usage: List<DailyApplicationUsageEntity>
-    ) {
+    open suspend fun replaceForDate(dateEpochDay: Long, usage: List<DailyApplicationUsageEntity>) {
         deleteForDate(dateEpochDay)
         if (usage.isNotEmpty()) {
             upsertAll(usage)
