@@ -52,9 +52,8 @@ object ObservationRuntimeProvisionModule {
 
     @Provides
     @Singleton
-    fun provideUsageSessionReconstructor(
-        policy: UsageSessionReconstructionPolicy
-    ): UsageSessionReconstructor = UsageSessionReconstructor(policy)
+    fun provideUsageSessionReconstructor(policy: UsageSessionReconstructionPolicy): UsageSessionReconstructor =
+        UsageSessionReconstructor(policy)
 
     @Provides
     @Singleton
