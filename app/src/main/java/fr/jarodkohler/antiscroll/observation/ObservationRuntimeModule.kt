@@ -20,9 +20,7 @@ import javax.inject.Singleton
 abstract class ObservationRuntimeBindingModule {
     @Binds
     @Singleton
-    abstract fun bindObservationWorkScheduler(
-        scheduler: AndroidObservationWorkScheduler
-    ): ObservationWorkScheduler
+    abstract fun bindObservationWorkScheduler(scheduler: AndroidObservationWorkScheduler): ObservationWorkScheduler
 }
 
 @Module
@@ -35,8 +33,7 @@ object ObservationRuntimeProvisionModule {
 
     @Provides
     @Singleton
-    fun provideObservationSchedulingPolicy(): ObservationSchedulingPolicy =
-        DefaultObservationProfile.schedulingPolicy
+    fun provideObservationSchedulingPolicy(): ObservationSchedulingPolicy = DefaultObservationProfile.schedulingPolicy
 
     @Provides
     @Singleton
