@@ -22,4 +22,10 @@
     <string name="accessibility_unsupported">Not available yet</string>
     <string name="accessibility_error">Status error</string>
     <string name="accessibility_description">A minimal accessibility experiment may later improve detection speed. It is not implemented in this increment and usage-history collection will not depend on it.</string>
+    <string name="monitored_applications_title">Choose monitored apps</string>
+    <string name="monitored_applications_body">Select the installed scrolling applications Anti-Scroll should observe. Your choices are stored only on this device.</string>
+    <string name="monitored_applications_empty">No supported scrolling applications are currently installed on this device.</string>
+    <string name="monitored_applications_load_error">Anti-Scroll could not read the supported applications installed on this device.</string>
+    <string name="monitored_applications_save_error">The latest selection could not be saved. The previous configuration was restored.</string>
+    <string name="retry">Retry</string>
 </resources>
