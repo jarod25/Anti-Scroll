@@ -247,9 +247,10 @@ private class FakeProjectionObservationStateRepository(
 
     override suspend fun gapsIn(window: ObservationWindow, source: UsageEventSource): List<CollectionGap> =
         gaps.filter { gap ->
+            val gapEnd = gap.endExclusive
             gap.source == source &&
                 gap.startInclusive < window.endExclusive &&
-                (gap.endExclusive == null || gap.endExclusive > window.startInclusive)
+                (gapEnd == null || gapEnd > window.startInclusive)
         }
 
     override suspend fun recordGap(gap: CollectionGap) = Unit
