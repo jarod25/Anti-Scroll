@@ -383,17 +383,19 @@ private fun UsageEventSource.errorUsageAccessStatus(): UsageAccessStatus? = when
     UsageEventSource.ACCESSIBILITY -> null
 }
 
-private fun UsageEventSource.unavailableUsageAccessStatus(
-    reason: CollectionGapReason
-): UsageAccessStatus? = when (this) {
-    UsageEventSource.ACCESSIBILITY -> null
-    UsageEventSource.USAGE_STATS -> when (reason) {
-        CollectionGapReason.USAGE_ACCESS_MISSING -> UsageAccessStatus.MISSING
-        CollectionGapReason.DEVICE_LOCKED,
-        CollectionGapReason.HISTORY_INCOMPLETE,
-        CollectionGapReason.PERSISTENCE_FAILURE -> UsageAccessStatus.GRANTED
+private fun UsageEventSource.unavailableUsageAccessStatus(reason: CollectionGapReason): UsageAccessStatus? =
+    when (this) {
+        UsageEventSource.ACCESSIBILITY -> null
 
-        CollectionGapReason.SOURCE_UNAVAILABLE -> UsageAccessStatus.UNAVAILABLE
-        CollectionGapReason.UNKNOWN -> UsageAccessStatus.ERROR
+        UsageEventSource.USAGE_STATS -> when (reason) {
+            CollectionGapReason.USAGE_ACCESS_MISSING -> UsageAccessStatus.MISSING
+
+            CollectionGapReason.DEVICE_LOCKED,
+            CollectionGapReason.HISTORY_INCOMPLETE,
+            CollectionGapReason.PERSISTENCE_FAILURE -> UsageAccessStatus.GRANTED
+
+            CollectionGapReason.SOURCE_UNAVAILABLE -> UsageAccessStatus.UNAVAILABLE
+
+            CollectionGapReason.UNKNOWN -> UsageAccessStatus.ERROR
+        }
     }
-}
