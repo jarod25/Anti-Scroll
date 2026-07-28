@@ -178,11 +178,7 @@ class DailyUsageProjectionCoordinatorTest {
         shouldRetry = false
     )
 
-    private fun event(
-        instant: String,
-        type: UsageEventType,
-        activityClassName: String
-    ): NormalizedUsageEvent {
+    private fun event(instant: String, type: UsageEventType, activityClassName: String): NormalizedUsageEvent {
         val occurredAt = Instant.parse(instant)
         return NormalizedUsageEvent(
             id = UsageEventId("${type.name}-${occurredAt.toEpochMilli()}-$activityClassName"),
@@ -196,9 +192,8 @@ class DailyUsageProjectionCoordinatorTest {
     }
 }
 
-private class FakeProjectionMonitoredApplicationRepository(
-    private val applications: List<MonitoredApplication>
-) : MonitoredApplicationRepository {
+private class FakeProjectionMonitoredApplicationRepository(private val applications: List<MonitoredApplication>) :
+    MonitoredApplicationRepository {
     override fun observeAll(): Flow<List<MonitoredApplication>> = flowOf(applications)
 
     override suspend fun allApplications(): List<MonitoredApplication> = applications
@@ -209,9 +204,8 @@ private class FakeProjectionMonitoredApplicationRepository(
     override suspend fun save(application: MonitoredApplication) = Unit
 }
 
-private class FakeProjectionUsageEventRepository(
-    private val events: List<NormalizedUsageEvent>
-) : UsageEventRepository {
+private class FakeProjectionUsageEventRepository(private val events: List<NormalizedUsageEvent>) :
+    UsageEventRepository {
     override suspend fun append(events: Collection<NormalizedUsageEvent>): UsageEventAppendResult =
         UsageEventAppendResult(events.size, 0)
 
@@ -273,8 +267,7 @@ private class FakeProjectionObservationStateRepository(
 private class FakeDailyUsageRepository : DailyUsageRepository {
     val replacements = linkedMapOf<LocalDate, List<DailyApplicationUsage>>()
 
-    override fun observe(date: LocalDate): Flow<List<DailyApplicationUsage>> =
-        flowOf(replacements[date].orEmpty())
+    override fun observe(date: LocalDate): Flow<List<DailyApplicationUsage>> = flowOf(replacements[date].orEmpty())
 
     override suspend fun replace(date: LocalDate, usage: List<DailyApplicationUsage>) {
         replacements[date] = usage
