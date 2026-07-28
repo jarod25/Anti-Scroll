@@ -16,12 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ApplicationIcon(
-    label: String,
-    icon: ImageBitmap?,
-    modifier: Modifier = Modifier,
-    size: Dp = 44.dp
-) {
+fun ApplicationIcon(label: String, icon: ImageBitmap?, modifier: Modifier = Modifier, size: Dp = 44.dp) {
     if (icon == null) {
         Surface(
             modifier = modifier.size(size),
