@@ -49,6 +49,8 @@ interface ObservationCommitRepository {
 interface DailyUsageRepository {
     fun observe(date: LocalDate): Flow<List<DailyApplicationUsage>>
 
+    fun observeRange(fromInclusive: LocalDate, toInclusive: LocalDate): Flow<List<DailyApplicationUsage>>
+
     suspend fun replace(date: LocalDate, usage: List<DailyApplicationUsage>)
 }
 

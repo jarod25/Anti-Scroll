@@ -12,6 +12,8 @@ import fr.jarodkohler.antiscroll.domain.observation.ObservationStateRepository
 import fr.jarodkohler.antiscroll.domain.observation.UsageEventRepository
 import fr.jarodkohler.antiscroll.domain.observation.UsageObservationSource
 import fr.jarodkohler.antiscroll.engine.observation.DailyUsageProjectionCoordinator
+import fr.jarodkohler.antiscroll.engine.observation.ObservationBaselineCalculator
+import fr.jarodkohler.antiscroll.engine.observation.ObservationBaselinePolicy
 import fr.jarodkohler.antiscroll.engine.observation.ObservationReconciliationCoordinator
 import fr.jarodkohler.antiscroll.engine.observation.ObservationReconciliationPolicy
 import fr.jarodkohler.antiscroll.engine.observation.TimeZoneProvider
@@ -41,6 +43,15 @@ object ObservationRuntimeProvisionModule {
     @Singleton
     fun provideUsageSessionReconstructionPolicy(): UsageSessionReconstructionPolicy =
         DefaultObservationProfile.sessionReconstructionPolicy
+
+    @Provides
+    @Singleton
+    fun provideObservationBaselinePolicy(): ObservationBaselinePolicy = DefaultObservationProfile.baselinePolicy
+
+    @Provides
+    @Singleton
+    fun provideObservationBaselineCalculator(policy: ObservationBaselinePolicy): ObservationBaselineCalculator =
+        ObservationBaselineCalculator(policy)
 
     @Provides
     @Singleton

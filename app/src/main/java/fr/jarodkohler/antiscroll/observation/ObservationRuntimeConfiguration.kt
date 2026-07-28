@@ -1,6 +1,7 @@
 package fr.jarodkohler.antiscroll.observation
 
 import fr.jarodkohler.antiscroll.domain.observation.UsageEventSource
+import fr.jarodkohler.antiscroll.engine.observation.ObservationBaselinePolicy
 import fr.jarodkohler.antiscroll.engine.observation.ObservationReconciliationPolicy
 import fr.jarodkohler.antiscroll.engine.observation.UsageSessionReconstructionPolicy
 import java.time.Duration
@@ -37,6 +38,8 @@ object DefaultObservationProfile {
         internalTransitionGrace = Duration.ofSeconds(3),
         boundaryLookback = Duration.ofHours(6)
     )
+
+    val baselinePolicy = ObservationBaselinePolicy(requiredReliableDays = 7)
 
     val schedulingPolicy = ObservationSchedulingPolicy(
         periodicInterval = Duration.ofHours(1),

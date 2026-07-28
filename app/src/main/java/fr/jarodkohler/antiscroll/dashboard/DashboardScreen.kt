@@ -26,6 +26,7 @@ import java.time.Duration
 object DashboardTestTags {
     const val SUMMARY = "dashboard_summary"
     const val HEALTH = "dashboard_health"
+    const val BASELINE = "dashboard_baseline"
     const val EMPTY = "dashboard_empty"
     const val REFRESH = "dashboard_refresh"
 
@@ -75,6 +76,13 @@ fun DashboardScreen(
             MonitoringHealthCard(
                 collectionStatus = uiState.monitoringHealth.collectionStatus,
                 lastSuccessfulReconciliationAt = uiState.monitoringHealth.lastSuccessfulReconciliationAt
+            )
+        }
+
+        item {
+            ObservationBaselineCard(
+                baseline = uiState.observationBaseline,
+                modifier = Modifier.testTag(DashboardTestTags.BASELINE)
             )
         }
 

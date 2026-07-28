@@ -14,6 +14,13 @@ abstract class DailyUsageDao {
     )
     abstract fun observe(dateEpochDay: Long): Flow<List<DailyApplicationUsageEntity>>
 
+    @Query(
+        "SELECT * FROM daily_application_usage " +
+            "WHERE date_epoch_day BETWEEN :fromEpochDay AND :toEpochDay " +
+            "ORDER BY date_epoch_day, package_name"
+    )
+    abstract fun observeRange(fromEpochDay: Long, toEpochDay: Long): Flow<List<DailyApplicationUsageEntity>>
+
     @Query("DELETE FROM daily_application_usage WHERE date_epoch_day = :dateEpochDay")
     protected abstract suspend fun deleteForDate(dateEpochDay: Long)
 

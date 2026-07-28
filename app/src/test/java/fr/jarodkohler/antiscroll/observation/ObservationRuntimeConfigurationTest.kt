@@ -23,4 +23,9 @@ class ObservationRuntimeConfigurationTest {
         assertEquals(Duration.ofSeconds(3), policy.internalTransitionGrace)
         assertEquals(Duration.ofHours(6), policy.boundaryLookback)
     }
+
+    @Test
+    fun defaultBaselineRequiresAFullReliableWeek() {
+        assertEquals(7, DefaultObservationProfile.baselinePolicy.requiredReliableDays)
+    }
 }
