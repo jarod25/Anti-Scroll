@@ -102,9 +102,8 @@ class MainViewModelTest {
     }
 }
 
-private class FakeMonitoringPermissionReader(
-    private val usageAccessStatus: UsageAccessStatus
-) : MonitoringPermissionReader {
+private class FakeMonitoringPermissionReader(private val usageAccessStatus: UsageAccessStatus) :
+    MonitoringPermissionReader {
     override fun read(): MonitoringPermissionSnapshot = MonitoringPermissionSnapshot(
         usageAccessStatus = usageAccessStatus,
         accessibilityStatus = AccessibilityMonitoringStatus.UNSUPPORTED
@@ -117,9 +116,7 @@ private class FakeInstalledApplicationResolver(
     var resolveCount = 0
         private set
 
-    override suspend fun resolveInstalled(
-        catalog: List<SupportedApplication>
-    ): List<InstalledApplicationPresentation> {
+    override suspend fun resolveInstalled(catalog: List<SupportedApplication>): List<InstalledApplicationPresentation> {
         resolveCount += 1
         return installedApplications
     }
@@ -136,7 +133,7 @@ private class FakeMonitoredApplicationRepository : MonitoredApplicationRepositor
 
     override suspend fun save(application: MonitoredApplication) {
         savedApplications += application
-        applications.value = applications.value
-            .filterNot { existing -> existing.packageName == application.packageName } + application
+        applications.value =
+            applications.value.filterNot { existing -> existing.packageName == application.packageName } + application
     }
 }
