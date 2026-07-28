@@ -28,16 +28,14 @@ class RoomMonitoredApplicationRepository @Inject constructor(database: AntiScrol
     }
 }
 
-private fun MonitoredApplicationEntity.toDomain(): MonitoredApplication =
-    MonitoredApplication(
-        packageName = ApplicationPackageName(packageName),
-        isEnabled = isEnabled,
-        addedAt = Instant.ofEpochMilli(addedAtEpochMillis)
-    )
+private fun MonitoredApplicationEntity.toDomain(): MonitoredApplication = MonitoredApplication(
+    packageName = ApplicationPackageName(packageName),
+    isEnabled = isEnabled,
+    addedAt = Instant.ofEpochMilli(addedAtEpochMillis)
+)
 
-private fun MonitoredApplication.toEntity(): MonitoredApplicationEntity =
-    MonitoredApplicationEntity(
-        packageName = packageName.value,
-        isEnabled = isEnabled,
-        addedAtEpochMillis = addedAt.toEpochMilli()
-    )
+private fun MonitoredApplication.toEntity(): MonitoredApplicationEntity = MonitoredApplicationEntity(
+    packageName = packageName.value,
+    isEnabled = isEnabled,
+    addedAtEpochMillis = addedAt.toEpochMilli()
+)
