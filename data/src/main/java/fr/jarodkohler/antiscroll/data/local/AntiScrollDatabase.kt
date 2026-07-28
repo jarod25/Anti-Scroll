@@ -4,7 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 object AntiScrollDatabaseSchema {
-    const val VERSION = 2
+    const val VERSION = 3
     const val NAME = "anti_scroll.db"
 }
 
