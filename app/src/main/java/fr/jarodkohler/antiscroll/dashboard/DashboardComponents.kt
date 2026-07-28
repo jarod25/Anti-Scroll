@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import fr.jarodkohler.antiscroll.R
 import fr.jarodkohler.antiscroll.domain.observation.CollectionStatus
+import fr.jarodkohler.antiscroll.domain.observation.ObservationBaseline
+import fr.jarodkohler.antiscroll.domain.observation.ObservationBaselineStatus
 import fr.jarodkohler.antiscroll.ui.components.ApplicationIcon
 import java.time.Duration
 import java.time.Instant
@@ -142,6 +144,78 @@ internal fun MonitoringHealthCard(collectionStatus: CollectionStatus, lastSucces
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ObservationBaselineCard(
+    baseline: ObservationBaseline?,
+    modifier: Modifier = Modifier
+) {
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.dashboard_baseline_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            when (baseline?.status) {
+                null -> Text(
+                    text = stringResource(R.string.dashboard_baseline_loading),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                ObservationBaselineStatus.NOT_STARTED -> Text(
+                    text = stringResource(R.string.dashboard_baseline_not_started),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                ObservationBaselineStatus.COLLECTING -> {
+                    Text(
+                        text = stringResource(
+                            R.string.dashboard_baseline_progress,
+                            baseline.reliableDayCount,
+                            baseline.requiredReliableDays
+                        ),
+                        fontWeight = FontWeight.Medium
+                    )
+                    LinearProgressIndicator(
+                        progress = {
+                            baseline.reliableDayCount.toFloat() / baseline.requiredReliableDays.toFloat()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        drawStopIndicator = {}
+                    )
+                    Text(
+                        text = stringResource(R.string.dashboard_baseline_collecting_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                ObservationBaselineStatus.READY -> {
+                    val duration = requireNotNull(baseline.typicalGlobalForegroundDuration)
+                    val openings = requireNotNull(baseline.typicalGlobalOpeningCount)
+                    Text(
+                        text = stringResource(R.string.dashboard_baseline_ready),
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = pluralStringResource(
+                            R.plurals.dashboard_baseline_typical_day,
+                            openings,
+                            duration.formatDashboardDuration(),
+                            openings
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
