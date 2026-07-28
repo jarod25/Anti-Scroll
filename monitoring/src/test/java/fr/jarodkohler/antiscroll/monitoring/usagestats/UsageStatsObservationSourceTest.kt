@@ -58,7 +58,8 @@ class UsageStatsObservationSourceTest {
             FakeUsageStatsEventGateway(UsageStatsQueryResult.Events(emptyList()))
         )
 
-        val result = source.collect(window, setOf(packageName)) as UsageCollectionResult.Collected
+        val result =
+            source.collect(window, setOf(packageName)) as UsageCollectionResult.Collected
 
         assertTrue(result.events.isEmpty())
         assertEquals(DataCompleteness.COMPLETE, result.completeness)
@@ -83,7 +84,8 @@ class UsageStatsObservationSourceTest {
             )
         )
 
-        val result = source.collect(window, setOf(packageName)) as UsageCollectionResult.Collected
+        val result =
+            source.collect(window, setOf(packageName)) as UsageCollectionResult.Collected
 
         assertEquals(1, result.events.size)
         assertEquals(packageName, result.events.single().packageName)
@@ -103,20 +105,22 @@ class UsageStatsObservationSourceTest {
     private fun source(
         usageAccessStatus: UsageAccessStatus,
         gateway: UsageStatsEventGateway
-    ): UsageStatsObservationSource = UsageStatsObservationSource(
-        permissionReader = FakeMonitoringPermissionReader(usageAccessStatus),
-        eventGateway = gateway,
-        normalizer = UsageStatsEventNormalizer()
-    )
+    ): UsageStatsObservationSource =
+        UsageStatsObservationSource(
+            permissionReader = FakeMonitoringPermissionReader(usageAccessStatus),
+            eventGateway = gateway,
+            normalizer = UsageStatsEventNormalizer()
+        )
 }
 
 private class FakeMonitoringPermissionReader(
     private val usageAccessStatus: UsageAccessStatus
 ) : MonitoringPermissionReader {
-    override fun read(): MonitoringPermissionSnapshot = MonitoringPermissionSnapshot(
-        usageAccessStatus = usageAccessStatus,
-        accessibilityStatus = AccessibilityMonitoringStatus.UNSUPPORTED
-    )
+    override fun read(): MonitoringPermissionSnapshot =
+        MonitoringPermissionSnapshot(
+            usageAccessStatus = usageAccessStatus,
+            accessibilityStatus = AccessibilityMonitoringStatus.UNSUPPORTED
+        )
 }
 
 private class FakeUsageStatsEventGateway(
