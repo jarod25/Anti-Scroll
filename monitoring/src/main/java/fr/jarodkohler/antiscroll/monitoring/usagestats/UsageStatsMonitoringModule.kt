@@ -13,13 +13,9 @@ import javax.inject.Singleton
 abstract class UsageStatsMonitoringModule {
     @Binds
     @Singleton
-    abstract fun bindUsageStatsEventGateway(
-        gateway: AndroidUsageStatsEventGateway
-    ): UsageStatsEventGateway
+    abstract fun bindUsageStatsEventGateway(gateway: AndroidUsageStatsEventGateway): UsageStatsEventGateway
 
     @Binds
     @IntoSet
-    abstract fun bindUsageStatsObservationSource(
-        source: UsageStatsObservationSource
-    ): UsageObservationSource
+    abstract fun bindUsageStatsObservationSource(source: UsageStatsObservationSource): UsageObservationSource
 }
