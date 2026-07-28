@@ -110,18 +110,15 @@ class UsageStatsObservationSourceTest {
     )
 }
 
-private class FakeMonitoringPermissionReader(
-    private val usageAccessStatus: UsageAccessStatus
-) : MonitoringPermissionReader {
+private class FakeMonitoringPermissionReader(private val usageAccessStatus: UsageAccessStatus) :
+    MonitoringPermissionReader {
     override fun read(): MonitoringPermissionSnapshot = MonitoringPermissionSnapshot(
         usageAccessStatus = usageAccessStatus,
         accessibilityStatus = AccessibilityMonitoringStatus.UNSUPPORTED
     )
 }
 
-private class FakeUsageStatsEventGateway(
-    private val result: UsageStatsQueryResult
-) : UsageStatsEventGateway {
+private class FakeUsageStatsEventGateway(private val result: UsageStatsQueryResult) : UsageStatsEventGateway {
     var queryCount: Int = 0
         private set
 
