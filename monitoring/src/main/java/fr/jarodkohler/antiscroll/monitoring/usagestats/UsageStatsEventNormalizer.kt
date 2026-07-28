@@ -48,8 +48,7 @@ class UsageStatsEventNormalizer @Inject constructor() {
             record.packageName,
             record.eventType.name,
             record.occurredAtEpochMillis.toString(),
-            record.activityClassName.orEmpty(),
-            record.instanceId.toString()
+            record.activityClassName.orEmpty()
         ).joinToString(separator = "|")
 
         val digest = MessageDigest.getInstance("SHA-256")
