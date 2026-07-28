@@ -83,11 +83,10 @@ class RoomObservationRepository @Inject constructor(private val database: AntiSc
         dao.upsertCheckpoint(checkpoint.toEntity())
     }
 
-    override fun observeGaps(window: ObservationWindow): Flow<List<CollectionGap>> =
-        dao.observeGaps(
-            startInclusiveEpochMillis = window.startInclusive.toEpochMilli(),
-            endExclusiveEpochMillis = window.endExclusive.toEpochMilli()
-        ).map { entities -> entities.map(CollectionGapEntity::toDomain) }
+    override fun observeGaps(window: ObservationWindow): Flow<List<CollectionGap>> = dao.observeGaps(
+        startInclusiveEpochMillis = window.startInclusive.toEpochMilli(),
+        endExclusiveEpochMillis = window.endExclusive.toEpochMilli()
+    ).map { entities -> entities.map(CollectionGapEntity::toDomain) }
 
     override suspend fun recordGap(gap: CollectionGap) {
         dao.insertGap(gap.toEntity())
