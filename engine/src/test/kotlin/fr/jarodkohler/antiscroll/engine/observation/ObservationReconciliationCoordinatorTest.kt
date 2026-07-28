@@ -249,9 +249,8 @@ private class FakeUsageObservationSource : UsageObservationSource {
     ): UsageCollectionResult = collector(window, packageNames)
 }
 
-private class FakeMonitoredApplicationRepository(
-    private val applications: List<MonitoredApplication>
-) : MonitoredApplicationRepository {
+private class FakeMonitoredApplicationRepository(private val applications: List<MonitoredApplication>) :
+    MonitoredApplicationRepository {
     override fun observeAll(): Flow<List<MonitoredApplication>> = flowOf(applications)
 
     override suspend fun enabledApplications(): List<MonitoredApplication> =
