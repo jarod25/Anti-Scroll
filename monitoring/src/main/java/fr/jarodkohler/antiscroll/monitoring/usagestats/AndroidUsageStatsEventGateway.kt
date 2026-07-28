@@ -56,15 +56,13 @@ constructor(@param:ApplicationContext private val context: Context) :
         usageStatsManager: UsageStatsManager,
         window: ObservationWindow,
         packageNames: Set<ApplicationPackageName>
-    ): UsageEvents? {
-        return if (Build.VERSION.SDK_INT >= 35) {
-            queryFiltered(usageStatsManager, window, packageNames)
-        } else {
-            usageStatsManager.queryEvents(
-                window.startInclusive.toEpochMilli(),
-                window.endExclusive.toEpochMilli()
-            )
-        }
+    ): UsageEvents? = if (Build.VERSION.SDK_INT >= 35) {
+        queryFiltered(usageStatsManager, window, packageNames)
+    } else {
+        usageStatsManager.queryEvents(
+            window.startInclusive.toEpochMilli(),
+            window.endExclusive.toEpochMilli()
+        )
     }
 
     @RequiresApi(35)
