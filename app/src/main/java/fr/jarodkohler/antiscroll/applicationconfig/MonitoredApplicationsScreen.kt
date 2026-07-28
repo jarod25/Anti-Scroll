@@ -44,8 +44,7 @@ object MonitoredApplicationsTestTags {
     const val SAVE_ERROR = "monitored_applications_save_error"
     const val SETTINGS_ERROR = "monitored_applications_settings_error"
 
-    fun switch(packageName: ApplicationPackageName): String =
-        "monitored_application_switch_${packageName.value}"
+    fun switch(packageName: ApplicationPackageName): String = "monitored_application_switch_${packageName.value}"
 }
 
 @Composable
@@ -180,10 +179,7 @@ private fun MonitoredApplicationRow(
 }
 
 @Composable
-private fun ApplicationIcon(
-    application: MonitoredApplicationUiModel,
-    modifier: Modifier = Modifier
-) {
+private fun ApplicationIcon(application: MonitoredApplicationUiModel, modifier: Modifier = Modifier) {
     val icon = application.icon
     if (icon == null) {
         Surface(
@@ -238,10 +234,7 @@ private fun EmptyApplications(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ApplicationLoadError(
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun ApplicationLoadError(onRetry: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
