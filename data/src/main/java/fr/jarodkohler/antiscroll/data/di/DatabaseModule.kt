@@ -21,6 +21,8 @@ object DatabaseModule {
         context,
         AntiScrollDatabase::class.java,
         AntiScrollDatabaseSchema.NAME
-    ).addMigrations(DatabaseMigrations.MIGRATION_1_2)
-        .build()
+    ).addMigrations(
+        DatabaseMigrations.MIGRATION_1_2,
+        DatabaseMigrations.MIGRATION_2_3
+    ).build()
 }
