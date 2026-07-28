@@ -138,11 +138,7 @@ class UsageSessionReconstructorTest {
         assertTrue(sessions.single().endInferred)
     }
 
-    private fun event(
-        instant: String,
-        type: UsageEventType,
-        activityClassName: String?
-    ): NormalizedUsageEvent {
+    private fun event(instant: String, type: UsageEventType, activityClassName: String?): NormalizedUsageEvent {
         val occurredAt = Instant.parse(instant)
         return NormalizedUsageEvent(
             id = UsageEventId("${type.name}-${occurredAt.toEpochMilli()}-${activityClassName.orEmpty()}"),
