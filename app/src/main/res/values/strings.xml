@@ -1,17 +1,21 @@
 <resources>
     <string name="app_name">Anti-Scroll</string>
     <string name="permission_onboarding_title">Set up observation</string>
-    <string name="permission_onboarding_body">Anti-Scroll needs Android usage access to measure scrolling applications. This access is read-only and all observations stay on this device.</string>
+    <string name="permission_onboarding_body">Android shows a strong warning because usage history is sensitive. Anti-Scroll uses this access only to measure time spent in the scrolling applications you choose.</string>
+    <string name="usage_access_privacy_title">Before you continue</string>
+    <string name="usage_access_privacy_usage">Anti-Scroll reads which supported application was in the foreground and when.</string>
+    <string name="usage_access_privacy_exclusions">It cannot read messages, passwords, typed text, photos or screen contents.</string>
+    <string name="usage_access_privacy_local">All observations and settings remain on this device. Nothing is sent to a server.</string>
     <string name="usage_access_title">Usage access</string>
     <string name="usage_access_granted">Granted</string>
     <string name="usage_access_required">Required</string>
     <string name="usage_access_unavailable">Unavailable</string>
     <string name="usage_access_error">Status error</string>
     <string name="usage_access_granted_description">Android allows Anti-Scroll to read usage history. The status is checked again whenever the application resumes.</string>
-    <string name="usage_access_required_description">Grant access in Android settings so Anti-Scroll can reconstruct application usage. Opening settings alone does not count as approval.</string>
+    <string name="usage_access_required_description">Android requires this special access to reconstruct usage sessions. You remain in control and can revoke it at any time.</string>
     <string name="usage_access_unavailable_description">This device does not expose the expected usage-access service. Observation cannot start until Android provides it.</string>
     <string name="usage_access_error_description">Anti-Scroll could not read the current system state. You can review the setting and return to try again.</string>
-    <string name="open_usage_access_settings">Open usage access settings</string>
+    <string name="open_usage_access_settings">Continue to Android settings</string>
     <string name="review_usage_access_settings">Review usage access settings</string>
     <string name="settings_launch_error">Android could not open the usage-access settings screen on this device.</string>
     <string name="accessibility_title">Accessibility monitoring</string>
@@ -22,4 +26,10 @@
     <string name="accessibility_unsupported">Not available yet</string>
     <string name="accessibility_error">Status error</string>
     <string name="accessibility_description">A minimal accessibility experiment may later improve detection speed. It is not implemented in this increment and usage-history collection will not depend on it.</string>
+    <string name="monitored_applications_title">Choose monitored apps</string>
+    <string name="monitored_applications_body">Select the installed scrolling applications Anti-Scroll should observe. Your choices are stored only on this device.</string>
+    <string name="monitored_applications_empty">No supported scrolling applications are currently installed on this device.</string>
+    <string name="monitored_applications_load_error">Anti-Scroll could not read the supported applications installed on this device.</string>
+    <string name="monitored_applications_save_error">The latest selection could not be saved. The previous configuration was restored.</string>
+    <string name="retry">Retry</string>
 </resources>

@@ -6,45 +6,37 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
-import fr.jarodkohler.antiscroll.domain.observation.AccessibilityMonitoringStatus
-import fr.jarodkohler.antiscroll.domain.observation.UsageAccessStatus
-import fr.jarodkohler.antiscroll.monitoring.permission.MonitoringPermissionReader
-import fr.jarodkohler.antiscroll.monitoring.permission.MonitoringPermissionSnapshot
-import fr.jarodkohler.antiscroll.permission.PermissionOnboardingScreen
 import fr.jarodkohler.antiscroll.ui.theme.AntiScrollTheme
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    @Inject
-    lateinit var permissionReader: MonitoringPermissionReader
-
-    private var permissionSnapshot by mutableStateOf(
-        MonitoringPermissionSnapshot(
-            usageAccessStatus = UsageAccessStatus.UNAVAILABLE,
-            accessibilityStatus = AccessibilityMonitoringStatus.UNSUPPORTED
-        )
-    )
+    private val viewModel: MainViewModel by viewModels()
     private var settingsLaunchFailed by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val uiState by viewModel.uiState.collectAsState()
+
             AntiScrollTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    PermissionOnboardingScreen(
-                        permissionSnapshot = permissionSnapshot,
+                    AntiScrollApp(
+                        uiState = uiState,
                         settingsLaunchFailed = settingsLaunchFailed,
                         onOpenUsageAccessSettings = ::openUsageAccessSettings,
+                        onSetApplicationEnabled = viewModel::setApplicationEnabled,
+                        onRetryApplications = viewModel::refresh,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -55,7 +47,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         settingsLaunchFailed = false
-        permissionSnapshot = permissionReader.read()
+        viewModel.refresh()
     }
 
     private fun openUsageAccessSettings() {
