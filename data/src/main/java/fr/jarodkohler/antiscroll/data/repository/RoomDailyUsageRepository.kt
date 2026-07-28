@@ -22,6 +22,21 @@ class RoomDailyUsageRepository @Inject constructor(database: AntiScrollDatabase)
             entities.map(DailyApplicationUsageEntity::toDomain)
         }
 
+    override fun observeRange(
+        fromInclusive: LocalDate,
+        toInclusive: LocalDate
+    ): Flow<List<DailyApplicationUsage>> {
+        require(!toInclusive.isBefore(fromInclusive)) {
+            "Daily usage range must not end before it starts"
+        }
+        return dao.observeRange(
+            fromEpochDay = fromInclusive.toEpochDay(),
+            toEpochDay = toInclusive.toEpochDay()
+        ).map { entities ->
+            entities.map(DailyApplicationUsageEntity::toDomain)
+        }
+    }
+
     override suspend fun replace(date: LocalDate, usage: List<DailyApplicationUsage>) {
         require(usage.all { item -> item.date == date }) {
             "Daily usage replacement must contain only the requested date"
