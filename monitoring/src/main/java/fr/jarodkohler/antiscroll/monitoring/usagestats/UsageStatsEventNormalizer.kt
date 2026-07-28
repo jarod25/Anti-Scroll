@@ -54,14 +54,13 @@ class UsageStatsEventNormalizer @Inject constructor() {
 
         val digest = MessageDigest.getInstance("SHA-256")
             .digest(canonicalValue.toByteArray(Charsets.UTF_8))
-            .joinToString(separator = "") { byte -> "%02x".format(byte) }
+            .joinToString(separator = "") { byte -> "%02x".format(byte.toInt() and 0xff) }
 
         return UsageEventId("usage-stats:$digest")
     }
 }
 
-private fun UsageStatsActivityEventType.toDomainType(): UsageEventType =
-    when (this) {
-        UsageStatsActivityEventType.RESUMED -> UsageEventType.FOREGROUND_ENTERED
-        UsageStatsActivityEventType.PAUSED -> UsageEventType.FOREGROUND_EXITED
-    }
+private fun UsageStatsActivityEventType.toDomainType(): UsageEventType = when (this) {
+    UsageStatsActivityEventType.RESUMED -> UsageEventType.FOREGROUND_ENTERED
+    UsageStatsActivityEventType.PAUSED -> UsageEventType.FOREGROUND_EXITED
+}
