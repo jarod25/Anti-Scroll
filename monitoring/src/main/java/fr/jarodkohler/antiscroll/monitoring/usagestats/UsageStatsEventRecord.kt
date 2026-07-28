@@ -11,7 +11,6 @@ enum class UsageStatsActivityEventType {
 data class UsageStatsEventRecord(
     val packageName: String,
     val activityClassName: String?,
-    val instanceId: Int,
     val eventType: UsageStatsActivityEventType,
     val occurredAtEpochMillis: Long
 ) {
