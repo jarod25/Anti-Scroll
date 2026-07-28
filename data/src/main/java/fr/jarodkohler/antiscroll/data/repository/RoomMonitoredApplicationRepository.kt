@@ -20,6 +20,9 @@ class RoomMonitoredApplicationRepository @Inject constructor(database: AntiScrol
         entities.map(MonitoredApplicationEntity::toDomain)
     }
 
+    override suspend fun allApplications(): List<MonitoredApplication> =
+        dao.findAll().map(MonitoredApplicationEntity::toDomain)
+
     override suspend fun enabledApplications(): List<MonitoredApplication> =
         dao.findEnabled().map(MonitoredApplicationEntity::toDomain)
 
