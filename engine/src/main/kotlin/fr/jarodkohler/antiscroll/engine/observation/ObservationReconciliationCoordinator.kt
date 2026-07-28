@@ -159,7 +159,7 @@ class ObservationReconciliationCoordinator(
                 window = window,
                 status = SourceReconciliationStatus.UNAVAILABLE,
                 failureReason = CollectionGapReason.UNKNOWN,
-                usageAccessStatus = source.errorUsageAccessStatus(),
+                usageAccessStatus = source.source.errorUsageAccessStatus(),
                 diagnosticsPersisted = persisted,
                 shouldRetry = true
             )
@@ -172,7 +172,7 @@ class ObservationReconciliationCoordinator(
                 window = window,
                 status = SourceReconciliationStatus.UNAVAILABLE,
                 failureReason = CollectionGapReason.UNKNOWN,
-                usageAccessStatus = source.errorUsageAccessStatus(),
+                usageAccessStatus = source.source.errorUsageAccessStatus(),
                 diagnosticsPersisted = persisted,
                 shouldRetry = true
             )
