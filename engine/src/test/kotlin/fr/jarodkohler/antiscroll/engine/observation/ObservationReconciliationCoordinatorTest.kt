@@ -253,6 +253,8 @@ private class FakeMonitoredApplicationRepository(private val applications: List<
     MonitoredApplicationRepository {
     override fun observeAll(): Flow<List<MonitoredApplication>> = flowOf(applications)
 
+    override suspend fun allApplications(): List<MonitoredApplication> = applications
+
     override suspend fun enabledApplications(): List<MonitoredApplication> =
         applications.filter(MonitoredApplication::isEnabled)
 
@@ -271,6 +273,12 @@ private class FakeUsageEventRepository : UsageEventRepository {
         window: ObservationWindow,
         packageNames: Set<ApplicationPackageName>
     ): List<NormalizedUsageEvent> = emptyList()
+
+    override suspend fun latestBefore(
+        packageName: ApplicationPackageName,
+        source: UsageEventSource,
+        beforeExclusive: Instant
+    ): NormalizedUsageEvent? = null
 }
 
 private class FakeObservationCommitRepository : ObservationCommitRepository {
@@ -310,6 +318,13 @@ private class FakeObservationStateRepository(initialHealth: MonitoringHealth) : 
     }
 
     override fun observeGaps(window: ObservationWindow): Flow<List<CollectionGap>> = flowOf(gaps)
+
+    override suspend fun gapsIn(window: ObservationWindow, source: UsageEventSource): List<CollectionGap> =
+        gaps.filter { gap ->
+            gap.source == source &&
+                gap.startInclusive < window.endExclusive &&
+                (gap.endExclusive == null || gap.endExclusive > window.startInclusive)
+        }
 
     override suspend fun recordGap(gap: CollectionGap) {
         gaps += gap
