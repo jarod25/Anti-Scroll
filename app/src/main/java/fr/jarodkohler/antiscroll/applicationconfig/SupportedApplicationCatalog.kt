@@ -2,10 +2,7 @@ package fr.jarodkohler.antiscroll.applicationconfig
 
 import fr.jarodkohler.antiscroll.domain.application.ApplicationPackageName
 
-data class SupportedApplication(
-    val packageName: ApplicationPackageName,
-    val fallbackLabel: String
-)
+data class SupportedApplication(val packageName: ApplicationPackageName, val fallbackLabel: String)
 
 object SupportedApplicationCatalog {
     const val VERSION = 1
