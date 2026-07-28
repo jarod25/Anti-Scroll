@@ -128,6 +128,8 @@ private class FakeMonitoredApplicationRepository : MonitoredApplicationRepositor
 
     override fun observeAll(): Flow<List<MonitoredApplication>> = applications
 
+    override suspend fun allApplications(): List<MonitoredApplication> = applications.value
+
     override suspend fun enabledApplications(): List<MonitoredApplication> =
         applications.value.filter(MonitoredApplication::isEnabled)
 
