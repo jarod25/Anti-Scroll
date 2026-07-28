@@ -26,5 +26,7 @@ data class UsageEventEntity(
     @ColumnInfo(name = "source")
     val source: String,
     @ColumnInfo(name = "reliability")
-    val reliability: String
+    val reliability: String,
+    @ColumnInfo(name = "activity_class_name")
+    val activityClassName: String?
 )

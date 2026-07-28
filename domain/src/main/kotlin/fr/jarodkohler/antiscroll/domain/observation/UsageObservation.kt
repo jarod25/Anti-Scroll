@@ -40,8 +40,15 @@ data class NormalizedUsageEvent(
     val type: UsageEventType,
     val occurredAt: Instant,
     val source: UsageEventSource,
-    val reliability: UsageEventReliability
-)
+    val reliability: UsageEventReliability,
+    val activityClassName: String? = null
+) {
+    init {
+        require(activityClassName == null || activityClassName.isNotBlank()) {
+            "Usage event activity class name must be null or non-blank"
+        }
+    }
+}
 
 /** Distinguishes a valid empty collection from a source that could not be queried. */
 sealed interface UsageCollectionResult {

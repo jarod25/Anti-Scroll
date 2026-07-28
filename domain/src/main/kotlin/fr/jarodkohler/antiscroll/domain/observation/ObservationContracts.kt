@@ -2,11 +2,14 @@ package fr.jarodkohler.antiscroll.domain.observation
 
 import fr.jarodkohler.antiscroll.domain.application.ApplicationPackageName
 import fr.jarodkohler.antiscroll.domain.application.MonitoredApplication
+import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
 interface MonitoredApplicationRepository {
     fun observeAll(): Flow<List<MonitoredApplication>>
+
+    suspend fun allApplications(): List<MonitoredApplication>
 
     suspend fun enabledApplications(): List<MonitoredApplication>
 
@@ -27,6 +30,12 @@ interface UsageEventRepository {
         window: ObservationWindow,
         packageNames: Set<ApplicationPackageName>
     ): List<NormalizedUsageEvent>
+
+    suspend fun latestBefore(
+        packageName: ApplicationPackageName,
+        source: UsageEventSource,
+        beforeExclusive: Instant
+    ): NormalizedUsageEvent?
 }
 
 /** Commits one reconciled source window without advancing its checkpoint independently. */
@@ -55,6 +64,8 @@ interface ObservationStateRepository {
     suspend fun saveCheckpoint(checkpoint: CollectionCheckpoint)
 
     fun observeGaps(window: ObservationWindow): Flow<List<CollectionGap>>
+
+    suspend fun gapsIn(window: ObservationWindow, source: UsageEventSource): List<CollectionGap>
 
     suspend fun recordGap(gap: CollectionGap)
 }

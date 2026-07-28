@@ -32,7 +32,8 @@ class UsageStatsEventNormalizer @Inject constructor() {
                 type = record.eventType.toDomainType(),
                 occurredAt = occurredAt,
                 source = UsageEventSource.USAGE_STATS,
-                reliability = UsageEventReliability.OBSERVED
+                reliability = UsageEventReliability.OBSERVED,
+                activityClassName = record.activityClassName?.takeIf(String::isNotBlank)
             )
         }.sortedWith(
             compareBy<NormalizedUsageEvent>(NormalizedUsageEvent::occurredAt)

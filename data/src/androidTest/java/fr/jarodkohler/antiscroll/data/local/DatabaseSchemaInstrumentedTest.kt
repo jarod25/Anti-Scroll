@@ -4,6 +4,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -19,7 +20,7 @@ class DatabaseSchemaInstrumentedTest {
 
     @Test
     fun migrationOneToTwoPreservesConfigurationAndCreatesObservationTables() {
-        migrationHelper.createDatabase(TEST_DATABASE, 1).apply {
+        migrationHelper.createDatabase(VERSION_ONE_DATABASE, 1).apply {
             execSQL(
                 "INSERT INTO monitored_applications " +
                     "(package_name, is_enabled, added_at_epoch_millis) " +
@@ -29,7 +30,7 @@ class DatabaseSchemaInstrumentedTest {
         }
 
         val database = migrationHelper.runMigrationsAndValidate(
-            TEST_DATABASE,
+            VERSION_ONE_DATABASE,
             2,
             true,
             DatabaseMigrations.MIGRATION_1_2
@@ -67,7 +68,40 @@ class DatabaseSchemaInstrumentedTest {
         }
     }
 
+    @Test
+    fun migrationTwoToThreePreservesEventsAndAddsNullableActivityClass() {
+        migrationHelper.createDatabase(VERSION_TWO_DATABASE, 2).apply {
+            execSQL(
+                "INSERT INTO usage_events " +
+                    "(event_id, package_name, event_type, occurred_at_epoch_millis, source, reliability) " +
+                    "VALUES ('event-1', 'com.zhiliaoapp.musically', 'FOREGROUND_ENTERED', " +
+                    "1000, 'USAGE_STATS', 'OBSERVED')"
+            )
+            close()
+        }
+
+        val database = migrationHelper.runMigrationsAndValidate(
+            VERSION_TWO_DATABASE,
+            3,
+            true,
+            DatabaseMigrations.MIGRATION_2_3
+        )
+
+        try {
+            database.query(
+                "SELECT package_name, activity_class_name FROM usage_events WHERE event_id = 'event-1'"
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("com.zhiliaoapp.musically", cursor.getString(0))
+                assertNull(cursor.getString(1))
+            }
+        } finally {
+            database.close()
+        }
+    }
+
     private companion object {
-        const val TEST_DATABASE = "anti-scroll-migration-test"
+        const val VERSION_ONE_DATABASE = "anti-scroll-migration-v1-test"
+        const val VERSION_TWO_DATABASE = "anti-scroll-migration-v2-test"
     }
 }

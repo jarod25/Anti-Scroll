@@ -1,6 +1,8 @@
 package fr.jarodkohler.antiscroll.observation
 
+import fr.jarodkohler.antiscroll.domain.observation.UsageEventSource
 import fr.jarodkohler.antiscroll.engine.observation.ObservationReconciliationPolicy
+import fr.jarodkohler.antiscroll.engine.observation.UsageSessionReconstructionPolicy
 import java.time.Duration
 
 data class ObservationSchedulingPolicy(
@@ -28,6 +30,12 @@ object DefaultObservationProfile {
         initialLookback = Duration.ofHours(24),
         replayOverlap = Duration.ofMinutes(5),
         maximumLookback = Duration.ofDays(3)
+    )
+
+    val sessionReconstructionPolicy = UsageSessionReconstructionPolicy(
+        source = UsageEventSource.USAGE_STATS,
+        internalTransitionGrace = Duration.ofSeconds(3),
+        boundaryLookback = Duration.ofHours(6)
     )
 
     val schedulingPolicy = ObservationSchedulingPolicy(

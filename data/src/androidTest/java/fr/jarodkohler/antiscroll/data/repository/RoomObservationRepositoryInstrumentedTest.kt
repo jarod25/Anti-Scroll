@@ -63,6 +63,14 @@ class RoomObservationRepositoryInstrumentedTest {
         assertEquals(1, appendResult.insertedCount)
         assertEquals(1, appendResult.duplicateCount)
         assertEquals(listOf(event), storedEvents)
+        assertEquals(
+            event,
+            repository.latestBefore(
+                packageName = packageName,
+                source = UsageEventSource.USAGE_STATS,
+                beforeExclusive = Instant.ofEpochMilli(2_500L)
+            )
+        )
         assertEquals(emptyList<NormalizedUsageEvent>(), repository.eventsIn(window, emptySet()))
     }
 
@@ -117,6 +125,10 @@ class RoomObservationRepositoryInstrumentedTest {
         repository.recordGap(outsideGap)
 
         assertEquals(listOf(overlappingGap), repository.observeGaps(window).first())
+        assertEquals(
+            listOf(overlappingGap),
+            repository.gapsIn(window, UsageEventSource.USAGE_STATS)
+        )
     }
 
     private fun event(id: String, occurredAtEpochMillis: Long): NormalizedUsageEvent = NormalizedUsageEvent(
@@ -125,6 +137,7 @@ class RoomObservationRepositoryInstrumentedTest {
         type = UsageEventType.FOREGROUND_ENTERED,
         occurredAt = Instant.ofEpochMilli(occurredAtEpochMillis),
         source = UsageEventSource.USAGE_STATS,
-        reliability = UsageEventReliability.OBSERVED
+        reliability = UsageEventReliability.OBSERVED,
+        activityClassName = "FeedActivity"
     )
 }
