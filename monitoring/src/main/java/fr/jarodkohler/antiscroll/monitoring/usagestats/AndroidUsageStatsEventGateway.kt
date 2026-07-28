@@ -101,7 +101,6 @@ constructor(@param:ApplicationContext private val context: Context) :
             records += UsageStatsEventRecord(
                 packageName = packageName,
                 activityClassName = event.className,
-                instanceId = event.instanceId,
                 eventType = eventType,
                 occurredAtEpochMillis = event.timeStamp
             )
