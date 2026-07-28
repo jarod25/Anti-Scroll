@@ -13,6 +13,8 @@ import fr.jarodkohler.antiscroll.domain.observation.CollectionStatus
 import fr.jarodkohler.antiscroll.domain.observation.DailyApplicationUsage
 import fr.jarodkohler.antiscroll.domain.observation.DataCompleteness
 import fr.jarodkohler.antiscroll.domain.observation.MonitoringHealth
+import fr.jarodkohler.antiscroll.domain.observation.ObservationBaseline
+import fr.jarodkohler.antiscroll.domain.observation.ObservationBaselineStatus
 import fr.jarodkohler.antiscroll.domain.observation.UsageAccessStatus
 import fr.jarodkohler.antiscroll.ui.theme.AntiScrollTheme
 import java.time.Duration
@@ -29,7 +31,7 @@ class DashboardScreenTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun dailyUsageAndHealthAreDisplayedAndRefreshInvokesCallback() {
+    fun dailyUsageHealthAndBaselineProgressAreDisplayedAndRefreshInvokesCallback() {
         val tiktokPackage = ApplicationPackageName("com.zhiliaoapp.musically")
         var refreshRequested = false
 
@@ -52,6 +54,12 @@ class DashboardScreenTest {
                             accessibilityStatus = AccessibilityMonitoringStatus.UNSUPPORTED,
                             collectionStatus = CollectionStatus.DEGRADED,
                             lastSuccessfulReconciliationAt = Instant.parse("2026-07-28T18:00:00Z")
+                        ),
+                        observationBaseline = ObservationBaseline(
+                            status = ObservationBaselineStatus.COLLECTING,
+                            requiredReliableDays = 7,
+                            reliableDayCount = 2,
+                            observationStartedOn = LocalDate.of(2026, 7, 26)
                         )
                     ),
                     applications = listOf(
@@ -69,8 +77,10 @@ class DashboardScreenTest {
 
         composeRule.onNodeWithTag(DashboardTestTags.SUMMARY).assertIsDisplayed()
         composeRule.onNodeWithTag(DashboardTestTags.HEALTH).assertIsDisplayed()
+        composeRule.onNodeWithTag(DashboardTestTags.BASELINE).assertIsDisplayed()
         composeRule.onNodeWithText("1m 6s").assertIsDisplayed()
         composeRule.onNodeWithText("1m 6s • 1 opening").assertIsDisplayed()
+        composeRule.onNodeWithText("2 of 7 reliable days collected").assertIsDisplayed()
         composeRule.onNodeWithText("TikTok").assertIsDisplayed()
         composeRule.onNodeWithText("Partial").assertIsDisplayed()
         composeRule.onNodeWithText("Some usage may be missing").assertIsDisplayed()
@@ -95,5 +105,8 @@ class DashboardScreenTest {
         }
 
         composeRule.onNodeWithTag(DashboardTestTags.EMPTY).assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "Choose at least one monitored application to start learning your habits."
+        ).assertIsDisplayed()
     }
 }
