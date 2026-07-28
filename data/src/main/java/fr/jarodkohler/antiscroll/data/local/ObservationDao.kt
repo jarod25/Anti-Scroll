@@ -27,6 +27,22 @@ interface ObservationDao {
         packageNames: Set<String>
     ): List<UsageEventEntity>
 
+    @Query(
+        """
+        SELECT * FROM usage_events
+        WHERE package_name = :packageName
+          AND source = :source
+          AND occurred_at_epoch_millis < :beforeExclusiveEpochMillis
+        ORDER BY occurred_at_epoch_millis DESC, event_id DESC
+        LIMIT 1
+        """
+    )
+    suspend fun findLatestEventBefore(
+        packageName: String,
+        source: String,
+        beforeExclusiveEpochMillis: Long
+    ): UsageEventEntity?
+
     @Query("SELECT * FROM collection_checkpoints WHERE source = :source LIMIT 1")
     suspend fun findCheckpoint(source: String): CollectionCheckpointEntity?
 
@@ -42,6 +58,21 @@ interface ObservationDao {
         """
     )
     fun observeGaps(startInclusiveEpochMillis: Long, endExclusiveEpochMillis: Long): Flow<List<CollectionGapEntity>>
+
+    @Query(
+        """
+        SELECT * FROM collection_gaps
+        WHERE source = :source
+          AND start_inclusive_epoch_millis < :endExclusiveEpochMillis
+          AND (end_exclusive_epoch_millis IS NULL OR end_exclusive_epoch_millis > :startInclusiveEpochMillis)
+        ORDER BY start_inclusive_epoch_millis, gap_id
+        """
+    )
+    suspend fun findGapsIn(
+        source: String,
+        startInclusiveEpochMillis: Long,
+        endExclusiveEpochMillis: Long
+    ): List<CollectionGapEntity>
 
     @Insert
     suspend fun insertGap(gap: CollectionGapEntity)
