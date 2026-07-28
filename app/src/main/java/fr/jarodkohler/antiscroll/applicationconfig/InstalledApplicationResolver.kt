@@ -37,7 +37,9 @@ class AndroidInstalledApplicationResolver @Inject constructor(@param:Application
                 )
         }
 
-    private fun resolveInstalledApplication(supportedApplication: SupportedApplication): InstalledApplicationPresentation? {
+    private fun resolveInstalledApplication(
+        supportedApplication: SupportedApplication
+    ): InstalledApplicationPresentation? {
         val applicationInfo = runCatching {
             applicationInfo(supportedApplication.packageName.value)
         }.getOrNull() ?: return null
