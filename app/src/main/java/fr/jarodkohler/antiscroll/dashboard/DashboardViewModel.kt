@@ -14,8 +14,10 @@ import fr.jarodkohler.antiscroll.domain.observation.ObservationBaseline
 import fr.jarodkohler.antiscroll.domain.observation.ObservationStateRepository
 import fr.jarodkohler.antiscroll.domain.observation.UsageAccessStatus
 import fr.jarodkohler.antiscroll.engine.observation.ObservationBaselineCalculator
+import fr.jarodkohler.antiscroll.engine.observation.TimeZoneProvider
 import java.time.Clock
 import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +28,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+
+private data class DashboardDateContext(val date: LocalDate, val zoneId: ZoneId)
 
 private data class DailyUsageSnapshot(
     val date: LocalDate,
@@ -39,6 +43,7 @@ private data class MonitoredApplicationsSnapshot(val applications: List<Monitore
 
 private data class BaselineRequest(
     val currentDate: LocalDate,
+    val zoneId: ZoneId,
     val applications: List<MonitoredApplication>,
     val loadFailed: Boolean
 )
@@ -59,14 +64,15 @@ class DashboardViewModel @Inject constructor(
     observationStateRepository: ObservationStateRepository,
     monitoredApplicationRepository: MonitoredApplicationRepository,
     baselineCalculator: ObservationBaselineCalculator,
-    private val clock: Clock
+    private val clock: Clock,
+    private val timeZoneProvider: TimeZoneProvider
 ) : ViewModel() {
-    private val currentDate = MutableStateFlow(LocalDate.now(clock))
+    private val dateContext = MutableStateFlow(currentDateContext())
 
-    private val dailyUsage = currentDate.flatMapLatest { date ->
-        dailyUsageRepository.observe(date)
-            .map { usage -> DailyUsageSnapshot(date, usage, loadFailed = false) }
-            .catch { emit(DailyUsageSnapshot(date, emptyList(), loadFailed = true)) }
+    private val dailyUsage = dateContext.flatMapLatest { context ->
+        dailyUsageRepository.observe(context.date)
+            .map { usage -> DailyUsageSnapshot(context.date, usage, loadFailed = false) }
+            .catch { emit(DailyUsageSnapshot(context.date, emptyList(), loadFailed = true)) }
     }
 
     private val monitoringHealth = observationStateRepository.observeHealth()
@@ -85,11 +91,12 @@ class DashboardViewModel @Inject constructor(
         .catch { emit(MonitoredApplicationsSnapshot(emptyList(), loadFailed = true)) }
 
     private val observationBaseline: Flow<BaselineSnapshot> = combine(
-        currentDate,
+        dateContext,
         monitoredApplications
-    ) { date, applicationsSnapshot ->
+    ) { context, applicationsSnapshot ->
         BaselineRequest(
-            currentDate = date,
+            currentDate = context.date,
+            zoneId = context.zoneId,
             applications = applicationsSnapshot.applications,
             loadFailed = applicationsSnapshot.loadFailed
         )
@@ -120,11 +127,19 @@ class DashboardViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
-        initialValue = DashboardUiState(date = currentDate.value)
+        initialValue = DashboardUiState(date = dateContext.value.date)
     )
 
     fun refreshDate() {
-        currentDate.value = LocalDate.now(clock)
+        dateContext.value = currentDateContext()
+    }
+
+    private fun currentDateContext(): DashboardDateContext {
+        val zoneId = timeZoneProvider.currentZoneId()
+        return DashboardDateContext(
+            date = clock.instant().atZone(zoneId).toLocalDate(),
+            zoneId = zoneId
+        )
     }
 
     private fun observeBaseline(
@@ -134,7 +149,7 @@ class DashboardViewModel @Inject constructor(
     ): Flow<BaselineSnapshot> {
         val enabledApplications = request.applications.filter(MonitoredApplication::isEnabled)
         val startDate = enabledApplications.maxOfOrNull { application ->
-            application.addedAt.atZone(clock.zone).toLocalDate()
+            application.addedAt.atZone(request.zoneId).toLocalDate()
         }
         val endDate = request.currentDate.minusDays(1)
 
@@ -145,7 +160,7 @@ class DashboardViewModel @Inject constructor(
                         monitoredApplications = request.applications,
                         dailyUsage = emptyList(),
                         currentDate = request.currentDate,
-                        zoneId = clock.zone
+                        zoneId = request.zoneId
                     ),
                     loadFailed = false
                 )
@@ -159,7 +174,7 @@ class DashboardViewModel @Inject constructor(
                         monitoredApplications = request.applications,
                         dailyUsage = usage,
                         currentDate = request.currentDate,
-                        zoneId = clock.zone
+                        zoneId = request.zoneId
                     ),
                     loadFailed = false
                 )
