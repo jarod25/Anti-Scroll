@@ -53,6 +53,16 @@ class RoomObservationRepository @Inject constructor(private val database: AntiSc
         ).map(UsageEventEntity::toDomain)
     }
 
+    override suspend fun latestBefore(
+        packageName: ApplicationPackageName,
+        source: UsageEventSource,
+        beforeExclusive: Instant
+    ): NormalizedUsageEvent? = dao.findLatestEventBefore(
+        packageName = packageName.value,
+        source = source.name,
+        beforeExclusiveEpochMillis = beforeExclusive.toEpochMilli()
+    )?.toDomain()
+
     override suspend fun appendAndCheckpoint(
         events: Collection<NormalizedUsageEvent>,
         checkpoint: CollectionCheckpoint
@@ -90,6 +100,13 @@ class RoomObservationRepository @Inject constructor(private val database: AntiSc
         endExclusiveEpochMillis = window.endExclusive.toEpochMilli()
     ).map { entities -> entities.map(CollectionGapEntity::toDomain) }
 
+    override suspend fun gapsIn(window: ObservationWindow, source: UsageEventSource): List<CollectionGap> =
+        dao.findGapsIn(
+            source = source.name,
+            startInclusiveEpochMillis = window.startInclusive.toEpochMilli(),
+            endExclusiveEpochMillis = window.endExclusive.toEpochMilli()
+        ).map(CollectionGapEntity::toDomain)
+
     override suspend fun recordGap(gap: CollectionGap) {
         dao.insertGap(gap.toEntity())
     }
@@ -123,7 +140,8 @@ private fun NormalizedUsageEvent.toEntity(): UsageEventEntity = UsageEventEntity
     eventType = type.name,
     occurredAtEpochMillis = occurredAt.toEpochMilli(),
     source = source.name,
-    reliability = reliability.name
+    reliability = reliability.name,
+    activityClassName = activityClassName
 )
 
 private fun UsageEventEntity.toDomain(): NormalizedUsageEvent = NormalizedUsageEvent(
@@ -132,7 +150,8 @@ private fun UsageEventEntity.toDomain(): NormalizedUsageEvent = NormalizedUsageE
     type = UsageEventType.valueOf(eventType),
     occurredAt = Instant.ofEpochMilli(occurredAtEpochMillis),
     source = UsageEventSource.valueOf(source),
-    reliability = UsageEventReliability.valueOf(reliability)
+    reliability = UsageEventReliability.valueOf(reliability),
+    activityClassName = activityClassName
 )
 
 private fun CollectionCheckpoint.toEntity(): CollectionCheckpointEntity = CollectionCheckpointEntity(
