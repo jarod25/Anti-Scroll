@@ -42,6 +42,7 @@ object MonitoredApplicationsTestTags {
     const val EMPTY = "monitored_applications_empty"
     const val LOAD_ERROR = "monitored_applications_load_error"
     const val SAVE_ERROR = "monitored_applications_save_error"
+    const val SETTINGS_ERROR = "monitored_applications_settings_error"
 
     fun switch(packageName: ApplicationPackageName): String =
         "monitored_application_switch_${packageName.value}"
@@ -50,6 +51,7 @@ object MonitoredApplicationsTestTags {
 @Composable
 fun MonitoredApplicationsScreen(
     uiState: MainUiState,
+    settingsLaunchFailed: Boolean,
     onSetApplicationEnabled: (ApplicationPackageName, Boolean) -> Unit,
     onRetry: () -> Unit,
     onReviewUsageAccessSettings: () -> Unit,
@@ -76,6 +78,18 @@ fun MonitoredApplicationsScreen(
             modifier = Modifier.align(Alignment.End)
         ) {
             Text(text = stringResource(R.string.review_usage_access_settings))
+        }
+
+        if (settingsLaunchFailed) {
+            Text(
+                text = stringResource(R.string.settings_launch_error),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(MonitoredApplicationsTestTags.SETTINGS_ERROR),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
         if (uiState.configurationSaveFailed) {
@@ -268,6 +282,7 @@ private fun MonitoredApplicationsScreenPreview() {
                     )
                 )
             ),
+            settingsLaunchFailed = false,
             onSetApplicationEnabled = { _, _ -> },
             onRetry = {},
             onReviewUsageAccessSettings = {}
