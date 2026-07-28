@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -169,15 +170,17 @@ internal fun DashboardApplicationRow(
         supportingContent = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = stringResource(
-                        R.string.dashboard_application_summary,
+                    text = pluralStringResource(
+                        R.plurals.dashboard_application_summary,
+                        row.estimatedOpeningCount,
                         row.foregroundDuration.formatDashboardDuration(),
                         row.estimatedOpeningCount
                     )
                 )
                 LinearProgressIndicator(
                     progress = { progress },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    drawStopIndicator = {}
                 )
             }
         },
