@@ -18,10 +18,12 @@ import fr.jarodkohler.antiscroll.domain.observation.UsageAccessStatus
 import fr.jarodkohler.antiscroll.domain.observation.UsageEventSource
 import fr.jarodkohler.antiscroll.engine.observation.ObservationBaselineCalculator
 import fr.jarodkohler.antiscroll.engine.observation.ObservationBaselinePolicy
+import fr.jarodkohler.antiscroll.engine.observation.TimeZoneProvider
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,8 +55,8 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun currentUsageHealthAndReadyBaselineArePublished() = runTest(testDispatcher) {
-        val date = LocalDate.of(2026, 7, 28)
+    fun localUsageHealthAndReadyBaselineArePublishedAfterUtcDayBoundary() = runTest(testDispatcher) {
+        val date = LocalDate.of(2026, 7, 29)
         val packageName = ApplicationPackageName("com.zhiliaoapp.musically")
         val currentUsage = DailyApplicationUsage(
             date = date,
@@ -76,12 +78,12 @@ class DashboardViewModelTest {
             usageAccessStatus = UsageAccessStatus.GRANTED,
             accessibilityStatus = AccessibilityMonitoringStatus.UNSUPPORTED,
             collectionStatus = CollectionStatus.HEALTHY,
-            lastSuccessfulReconciliationAt = Instant.parse("2026-07-28T12:00:00Z")
+            lastSuccessfulReconciliationAt = Instant.parse("2026-07-28T23:00:00Z")
         )
         val application = MonitoredApplication(
             packageName = packageName,
             isEnabled = true,
-            addedAt = Instant.parse("2026-07-21T00:00:00Z")
+            addedAt = Instant.parse("2026-07-21T22:00:00Z")
         )
         val dailyUsageRepository = FakeDailyUsageRepository(listOf(currentUsage) + historicalUsage)
 
@@ -90,7 +92,8 @@ class DashboardViewModelTest {
             observationStateRepository = FakeObservationStateRepository(health),
             monitoredApplicationRepository = FakeMonitoredApplicationRepository(listOf(application)),
             baselineCalculator = ObservationBaselineCalculator(ObservationBaselinePolicy(requiredReliableDays = 7)),
-            clock = Clock.fixed(Instant.parse("2026-07-28T14:00:00Z"), ZoneOffset.UTC)
+            clock = Clock.fixed(Instant.parse("2026-07-28T23:14:00Z"), ZoneOffset.UTC),
+            timeZoneProvider = TimeZoneProvider { ZoneId.of("Europe/Paris") }
         )
         advanceUntilIdle()
 
@@ -107,16 +110,21 @@ private class FakeDailyUsageRepository(usage: List<DailyApplicationUsage>) : Dai
     override fun observe(date: LocalDate): Flow<List<DailyApplicationUsage>> =
         flowOf(usage.value.filter { item -> item.date == date })
 
-    override fun observeRange(fromInclusive: LocalDate, toInclusive: LocalDate): Flow<List<DailyApplicationUsage>> =
-        flowOf(usage.value.filter { item -> item.date in fromInclusive..toInclusive })
+    override fun observeRange(
+        fromInclusive: LocalDate,
+        toInclusive: LocalDate
+    ): Flow<List<DailyApplicationUsage>> = flowOf(
+        usage.value.filter { item -> item.date in fromInclusive..toInclusive }
+    )
 
     override suspend fun replace(date: LocalDate, usage: List<DailyApplicationUsage>) {
         this.usage.value = this.usage.value.filterNot { item -> item.date == date } + usage
     }
 }
 
-private class FakeMonitoredApplicationRepository(applications: List<MonitoredApplication>) :
-    MonitoredApplicationRepository {
+private class FakeMonitoredApplicationRepository(
+    applications: List<MonitoredApplication>
+) : MonitoredApplicationRepository {
     private val applications = MutableStateFlow(applications)
 
     override fun observeAll(): Flow<List<MonitoredApplication>> = applications
@@ -127,8 +135,7 @@ private class FakeMonitoredApplicationRepository(applications: List<MonitoredApp
         applications.value.filter(MonitoredApplication::isEnabled)
 
     override suspend fun save(application: MonitoredApplication) {
-        applications.value =
-            applications.value.filterNot { item -> item.packageName == application.packageName } + application
+        applications.value = applications.value.filterNot { item -> item.packageName == application.packageName } + application
     }
 }
 
