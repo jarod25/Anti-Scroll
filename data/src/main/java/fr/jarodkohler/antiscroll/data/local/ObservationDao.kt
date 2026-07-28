@@ -49,6 +49,9 @@ interface ObservationDao {
     @Query("SELECT * FROM monitoring_health WHERE singleton_id = 1 LIMIT 1")
     fun observeHealth(): Flow<MonitoringHealthEntity?>
 
+    @Query("SELECT * FROM monitoring_health WHERE singleton_id = 1 LIMIT 1")
+    suspend fun findHealth(): MonitoringHealthEntity?
+
     @Upsert
     suspend fun upsertHealth(health: MonitoringHealthEntity)
 }
