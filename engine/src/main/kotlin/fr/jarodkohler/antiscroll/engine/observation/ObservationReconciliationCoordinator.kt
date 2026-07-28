@@ -383,7 +383,9 @@ private fun UsageEventSource.errorUsageAccessStatus(): UsageAccessStatus? = when
     UsageEventSource.ACCESSIBILITY -> null
 }
 
-private fun UsageEventSource.unavailableUsageAccessStatus(reason: CollectionGapReason): UsageAccessStatus? = when (this) {
+private fun UsageEventSource.unavailableUsageAccessStatus(
+    reason: CollectionGapReason
+): UsageAccessStatus? = when (this) {
     UsageEventSource.ACCESSIBILITY -> null
     UsageEventSource.USAGE_STATS -> when (reason) {
         CollectionGapReason.USAGE_ACCESS_MISSING -> UsageAccessStatus.MISSING
