@@ -22,10 +22,7 @@ class RoomDailyUsageRepository @Inject constructor(database: AntiScrollDatabase)
             entities.map(DailyApplicationUsageEntity::toDomain)
         }
 
-    override fun observeRange(
-        fromInclusive: LocalDate,
-        toInclusive: LocalDate
-    ): Flow<List<DailyApplicationUsage>> {
+    override fun observeRange(fromInclusive: LocalDate, toInclusive: LocalDate): Flow<List<DailyApplicationUsage>> {
         require(!toInclusive.isBefore(fromInclusive)) {
             "Daily usage range must not end before it starts"
         }
