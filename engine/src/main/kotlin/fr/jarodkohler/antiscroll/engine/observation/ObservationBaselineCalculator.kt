@@ -51,8 +51,7 @@ class ObservationBaselineCalculator(private val policy: ObservationBaselinePolic
                 enabledPackages.all { packageName ->
                     usageForDate[packageName]?.completeness == DataCompleteness.COMPLETE
                 }
-            }
-            .sorted()
+            }.sorted()
             .take(policy.requiredReliableDays)
             .toList()
 
@@ -94,15 +93,13 @@ class ObservationBaselineCalculator(private val policy: ObservationBaselinePolic
         )
     }
 
-    private fun collectingBaseline(
-        observationStartedOn: LocalDate,
-        reliableDayCount: Int
-    ): ObservationBaseline = ObservationBaseline(
-        status = ObservationBaselineStatus.COLLECTING,
-        requiredReliableDays = policy.requiredReliableDays,
-        reliableDayCount = reliableDayCount,
-        observationStartedOn = observationStartedOn
-    )
+    private fun collectingBaseline(observationStartedOn: LocalDate, reliableDayCount: Int): ObservationBaseline =
+        ObservationBaseline(
+            status = ObservationBaselineStatus.COLLECTING,
+            requiredReliableDays = policy.requiredReliableDays,
+            reliableDayCount = reliableDayCount,
+            observationStartedOn = observationStartedOn
+        )
 }
 
 private fun medianLong(values: List<Long>): Long {
