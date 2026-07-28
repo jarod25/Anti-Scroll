@@ -31,6 +31,7 @@ import fr.jarodkohler.antiscroll.monitoring.permission.MonitoringPermissionSnaps
 import fr.jarodkohler.antiscroll.ui.theme.AntiScrollTheme
 
 object PermissionOnboardingTestTags {
+    const val PRIVACY_SUMMARY_CARD = "privacy_summary_card"
     const val USAGE_ACCESS_CARD = "usage_access_card"
     const val USAGE_ACCESS_BUTTON = "usage_access_button"
     const val SETTINGS_ERROR = "settings_error"
@@ -63,7 +64,9 @@ fun PermissionOnboardingScreen(
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+        PrivacySummaryCard()
+        Spacer(modifier = Modifier.height(16.dp))
         PermissionCard(
             title = stringResource(R.string.usage_access_title),
             status = stringResource(usageAccessPresentation.statusRes),
@@ -98,6 +101,48 @@ fun PermissionOnboardingScreen(
             description = stringResource(R.string.accessibility_description),
             testTag = PermissionOnboardingTestTags.ACCESSIBILITY_CARD,
             supportingLabel = stringResource(R.string.accessibility_optional)
+        )
+    }
+}
+
+@Composable
+private fun PrivacySummaryCard(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag(PermissionOnboardingTestTags.PRIVACY_SUMMARY_CARD)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.usage_access_privacy_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            PrivacyPoint(text = stringResource(R.string.usage_access_privacy_usage))
+            PrivacyPoint(text = stringResource(R.string.usage_access_privacy_exclusions))
+            PrivacyPoint(text = stringResource(R.string.usage_access_privacy_local))
+        }
+    }
+}
+
+@Composable
+private fun PrivacyPoint(text: String) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = "•",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
