@@ -150,10 +150,7 @@ internal fun MonitoringHealthCard(collectionStatus: CollectionStatus, lastSucces
 }
 
 @Composable
-internal fun ObservationBaselineCard(
-    baseline: ObservationBaseline?,
-    modifier: Modifier = Modifier
-) {
+internal fun ObservationBaselineCard(baseline: ObservationBaseline?, modifier: Modifier = Modifier) {
     Card(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
