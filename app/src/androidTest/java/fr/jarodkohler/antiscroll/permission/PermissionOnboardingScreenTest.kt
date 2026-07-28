@@ -22,7 +22,7 @@ class PermissionOnboardingScreenTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun missingUsageAccessShowsActionAndInvokesCallback() {
+    fun missingUsageAccessShowsPrivacyDisclosureAndInvokesCallback() {
         var clicked = false
 
         composeRule.setContent {
@@ -39,6 +39,12 @@ class PermissionOnboardingScreenTest {
         }
 
         composeRule.onNodeWithText("Required").assertIsDisplayed()
+        composeRule.onNodeWithTag(PermissionOnboardingTestTags.PRIVACY_SUMMARY_CARD)
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "It cannot read messages, passwords, typed text, photos or screen contents."
+        ).assertIsDisplayed()
+        composeRule.onNodeWithText("Continue to Android settings").assertIsDisplayed()
         composeRule.onNodeWithTag(PermissionOnboardingTestTags.USAGE_ACCESS_BUTTON)
             .assertIsDisplayed()
             .assertIsEnabled()
