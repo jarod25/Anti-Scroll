@@ -21,9 +21,10 @@ class DailyUsageProjectionCoordinator(
     private val dailyUsageRepository: DailyUsageRepository,
     private val sessionReconstructor: UsageSessionReconstructor,
     private val sessionPolicy: UsageSessionReconstructionPolicy,
-    private val zoneId: ZoneId
+    private val timeZoneProvider: TimeZoneProvider
 ) {
     suspend fun rebuild(report: ObservationReconciliationReport): DailyUsageProjectionReport {
+        val zoneId = timeZoneProvider.currentZoneId()
         val dates = report.sourceOutcomes.asSequence()
             .filter { outcome -> outcome.source == sessionPolicy.source }
             .flatMap { outcome -> outcome.window.datesThrough(report.completedAt, zoneId).asSequence() }
@@ -31,7 +32,7 @@ class DailyUsageProjectionCoordinator(
 
         var projectedRowCount = 0
         dates.forEach { date ->
-            projectedRowCount += rebuild(date, report.completedAt)
+            projectedRowCount += rebuild(date, report.completedAt, zoneId)
         }
 
         return DailyUsageProjectionReport(
@@ -40,7 +41,7 @@ class DailyUsageProjectionCoordinator(
         )
     }
 
-    private suspend fun rebuild(date: LocalDate, projectionThrough: Instant): Int {
+    private suspend fun rebuild(date: LocalDate, projectionThrough: Instant, zoneId: ZoneId): Int {
         val dayStart = date.atStartOfDay(zoneId).toInstant()
         if (!dayStart.isBefore(projectionThrough)) return 0
 
