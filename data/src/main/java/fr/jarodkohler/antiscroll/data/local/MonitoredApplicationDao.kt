@@ -10,6 +10,9 @@ interface MonitoredApplicationDao {
     @Query("SELECT * FROM monitored_applications ORDER BY package_name")
     fun observeAll(): Flow<List<MonitoredApplicationEntity>>
 
+    @Query("SELECT * FROM monitored_applications ORDER BY package_name")
+    suspend fun findAll(): List<MonitoredApplicationEntity>
+
     @Query("SELECT * FROM monitored_applications WHERE is_enabled = 1 ORDER BY package_name")
     suspend fun findEnabled(): List<MonitoredApplicationEntity>
 
