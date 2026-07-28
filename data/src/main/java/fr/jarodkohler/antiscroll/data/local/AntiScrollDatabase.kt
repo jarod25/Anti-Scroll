@@ -4,15 +4,26 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 object AntiScrollDatabaseSchema {
-    const val VERSION = 1
+    const val VERSION = 2
     const val NAME = "anti_scroll.db"
 }
 
 @Database(
-    entities = [MonitoredApplicationEntity::class],
+    entities = [
+        MonitoredApplicationEntity::class,
+        UsageEventEntity::class,
+        DailyApplicationUsageEntity::class,
+        CollectionCheckpointEntity::class,
+        CollectionGapEntity::class,
+        MonitoringHealthEntity::class
+    ],
     version = AntiScrollDatabaseSchema.VERSION,
     exportSchema = true
 )
 abstract class AntiScrollDatabase : RoomDatabase() {
     abstract fun monitoredApplicationDao(): MonitoredApplicationDao
+
+    abstract fun observationDao(): ObservationDao
+
+    abstract fun dailyUsageDao(): DailyUsageDao
 }
