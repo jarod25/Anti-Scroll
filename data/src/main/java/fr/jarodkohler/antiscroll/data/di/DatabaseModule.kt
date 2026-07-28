@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import fr.jarodkohler.antiscroll.data.local.AntiScrollDatabase
 import fr.jarodkohler.antiscroll.data.local.AntiScrollDatabaseSchema
+import fr.jarodkohler.antiscroll.data.local.DatabaseMigrations
 import javax.inject.Singleton
 
 @Module
@@ -20,5 +21,6 @@ object DatabaseModule {
         context,
         AntiScrollDatabase::class.java,
         AntiScrollDatabaseSchema.NAME
-    ).build()
+    ).addMigrations(DatabaseMigrations.MIGRATION_1_2)
+        .build()
 }

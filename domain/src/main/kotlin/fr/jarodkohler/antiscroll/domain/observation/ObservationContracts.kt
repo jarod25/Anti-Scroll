@@ -29,6 +29,14 @@ interface UsageEventRepository {
     ): List<NormalizedUsageEvent>
 }
 
+/** Commits one reconciled source window without advancing its checkpoint independently. */
+interface ObservationCommitRepository {
+    suspend fun appendAndCheckpoint(
+        events: Collection<NormalizedUsageEvent>,
+        checkpoint: CollectionCheckpoint
+    ): UsageEventAppendResult
+}
+
 interface DailyUsageRepository {
     fun observe(date: LocalDate): Flow<List<DailyApplicationUsage>>
 
