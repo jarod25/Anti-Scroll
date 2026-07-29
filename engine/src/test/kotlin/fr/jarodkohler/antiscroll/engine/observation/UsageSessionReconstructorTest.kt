@@ -24,6 +24,7 @@ class UsageSessionReconstructorTest {
         UsageSessionReconstructionPolicy(
             source = UsageEventSource.USAGE_STATS,
             internalTransitionGrace = Duration.ofSeconds(3),
+            openingContinuationGrace = Duration.ofMinutes(2),
             boundaryLookback = Duration.ofHours(6)
         )
     )
