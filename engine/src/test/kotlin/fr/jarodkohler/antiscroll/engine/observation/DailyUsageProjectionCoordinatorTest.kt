@@ -38,6 +38,7 @@ class DailyUsageProjectionCoordinatorTest {
     private val policy = UsageSessionReconstructionPolicy(
         source = UsageEventSource.USAGE_STATS,
         internalTransitionGrace = Duration.ofSeconds(3),
+        openingContinuationGrace = Duration.ofMinutes(2),
         boundaryLookback = Duration.ofHours(6)
     )
 
@@ -66,6 +67,31 @@ class DailyUsageProjectionCoordinatorTest {
         assertEquals(1, usage.estimatedOpeningCount)
         assertEquals(DataCompleteness.COMPLETE, usage.completeness)
         assertEquals(1, projectionReport.rebuiltDates.size)
+    }
+
+    @Test
+    fun briefShareReturnKeepsOneOpeningWithoutCountingInterruptionTime() = runTest {
+        val completedAt = Instant.parse("2026-07-28T12:00:00Z")
+        val eventRepository = FakeProjectionUsageEventRepository(
+            listOf(
+                event("2026-07-28T10:00:00Z", UsageEventType.FOREGROUND_ENTERED, "MainActivity"),
+                event("2026-07-28T10:05:00Z", UsageEventType.FOREGROUND_EXITED, "MainActivity"),
+                event("2026-07-28T10:05:45Z", UsageEventType.FOREGROUND_ENTERED, "MainActivity"),
+                event("2026-07-28T10:10:00Z", UsageEventType.FOREGROUND_EXITED, "MainActivity")
+            )
+        )
+        val dailyRepository = FakeDailyUsageRepository()
+        val coordinator = coordinator(
+            completedAt = completedAt,
+            eventRepository = eventRepository,
+            dailyRepository = dailyRepository
+        )
+
+        coordinator.rebuild(reconciliationReport(completedAt))
+
+        val usage = dailyRepository.replacements.getValue(LocalDate.parse("2026-07-28")).single()
+        assertEquals(Duration.ofMinutes(9).plusSeconds(15), usage.foregroundDuration)
+        assertEquals(1, usage.estimatedOpeningCount)
     }
 
     @Test
@@ -151,6 +177,7 @@ class DailyUsageProjectionCoordinatorTest {
         ),
         dailyUsageRepository = dailyRepository,
         sessionReconstructor = UsageSessionReconstructor(policy),
+        openingEstimator = UsageOpeningEstimator(policy),
         sessionPolicy = policy,
         timeZoneProvider = TimeZoneProvider { zoneId }
     )
