@@ -96,7 +96,7 @@ class UsageStatsSharedSessionEventSourceTest {
         assertTrue(collected[1] is SharedSessionEvent.ApplicationBackgrounded)
         assertEquals(1, gateway.windows.size)
         assertEquals(
-            origin.plusSeconds(20).minus(Duration.ofMinutes(12)).minusSeconds(5),
+            origin.plusSeconds(20).minus(Duration.ofMinutes(12)).minusSeconds(6),
             gateway.windows.single().startInclusive
         )
     }
@@ -150,7 +150,8 @@ class UsageStatsSharedSessionEventSourceTest {
         ),
         reconciliationPolicy = UsageStatsSessionReconciliationPolicy(
             pollingInterval = Duration.ofSeconds(2),
-            overlap = Duration.ofSeconds(5)
+            overlap = Duration.ofSeconds(5),
+            eventSettlementDelay = Duration.ofSeconds(1)
         )
     )
 
