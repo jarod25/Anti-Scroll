@@ -11,6 +11,7 @@ import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionEventSource
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionRuntimeStateSource
 import fr.jarodkohler.antiscroll.engine.restriction.RestrictionEngine
 import fr.jarodkohler.antiscroll.engine.restriction.SessionLimitRule
+import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionDeadlinePlanner
 import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionReducer
 import java.time.Duration
 import javax.inject.Qualifier
@@ -49,6 +50,12 @@ abstract class RestrictionRuntimeBindingModule {
     @Binds
     @Singleton
     abstract fun bindSharedSessionRuntimeClock(clock: AndroidSharedSessionRuntimeClock): SharedSessionRuntimeClock
+
+    @Binds
+    @Singleton
+    abstract fun bindSharedSessionDeadlineScheduler(
+        scheduler: CoroutineSharedSessionDeadlineScheduler
+    ): SharedSessionDeadlineScheduler
 }
 
 @Module
@@ -62,6 +69,10 @@ object RestrictionRuntimeProvisionModule {
     @Provides
     @Singleton
     fun provideSharedSessionReducer(): SharedSessionReducer = SharedSessionReducer()
+
+    @Provides
+    @Singleton
+    fun provideSharedSessionDeadlinePlanner(): SharedSessionDeadlinePlanner = SharedSessionDeadlinePlanner()
 
     @Provides
     @Singleton
