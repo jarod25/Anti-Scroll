@@ -13,10 +13,7 @@ fun interface SharedSessionDeadlineHandle {
 }
 
 interface SharedSessionDeadlineScheduler {
-    fun schedule(
-        delayDuration: Duration,
-        action: suspend () -> Unit
-    ): SharedSessionDeadlineHandle
+    fun schedule(delayDuration: Duration, action: suspend () -> Unit): SharedSessionDeadlineHandle
 }
 
 @Singleton
@@ -25,10 +22,7 @@ class CoroutineSharedSessionDeadlineScheduler
 constructor(
     @param:ApplicationCoroutineScope private val applicationScope: CoroutineScope
 ) : SharedSessionDeadlineScheduler {
-    override fun schedule(
-        delayDuration: Duration,
-        action: suspend () -> Unit
-    ): SharedSessionDeadlineHandle {
+    override fun schedule(delayDuration: Duration, action: suspend () -> Unit): SharedSessionDeadlineHandle {
         require(!delayDuration.isNegative) { "Session deadline delay must not be negative" }
 
         val job = applicationScope.launch {
@@ -38,9 +32,7 @@ constructor(
         return JobSharedSessionDeadlineHandle(job)
     }
 
-    private class JobSharedSessionDeadlineHandle(
-        private val job: Job
-    ) : SharedSessionDeadlineHandle {
+    private class JobSharedSessionDeadlineHandle(private val job: Job) : SharedSessionDeadlineHandle {
         override fun cancel() {
             job.cancel()
         }
