@@ -9,12 +9,13 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ApplicationBootstrapInstrumentedTest {
     @Test
-    fun registeredApplicationUsesHiltBootstrap() {
+    fun registeredApplicationStartsSharedSessionRuntime() {
         val application = InstrumentationRegistry
             .getInstrumentation()
             .targetContext
             .applicationContext
 
         assertTrue(application is AntiScrollApplication)
+        assertTrue((application as AntiScrollApplication).sharedSessionRuntime.isStarted)
     }
 }

@@ -45,7 +45,7 @@ Its scope is deliberately narrow:
 - persist no accessibility event journal;
 - perform no remote transmission.
 
-Package-level window-state events can repeat for internal Activity transitions. The source therefore reports signals rather than claiming that every event is a unique application opening. Future restriction evaluation must remain idempotent and derive session behavior from its own state.
+Package-level window-state events can repeat for internal Activity transitions. The source therefore reports signals rather than claiming that every event is a unique application opening. Restriction evaluation remains idempotent and derives session behavior from its own state.
 
 The application reports accessibility state separately from Usage Access:
 
@@ -64,15 +64,24 @@ The monitoring implementation combines sources with distinct roles:
 
 ```text
 UsageStats history ──────> normalized durable observations -> Room journal
-Accessibility signals ───> transient foreground signals ───> future restriction evaluation
+Accessibility signals ───> explicit foreground events ─────> shared-session runtime
+Additional event sources ─> explicit background/recovery ──> shared-session runtime
 System signals ──────────> recovery and interpretation triggers
 ```
 
-UsageStats owns historical reconstruction and comparison with Android system data. Accessibility provides low-latency signals only. System signals report boot, user unlock, time, time-zone and package changes that affect recovery or interpretation.
+UsageStats owns historical reconstruction and comparison with Android system data. Accessibility provides low-latency foreground signals only. System signals report boot, user unlock, time, time-zone and package changes that affect recovery or interpretation.
+
+`ForegroundSignalSharedSessionEventSource` preserves the accessibility signal's package, wall-clock instant and elapsed realtime while adapting it to `ApplicationForegrounded`. It does not infer a matching background transition.
+
+`SharedSessionRuntime` starts with the application process, serializes profile and event inputs, applies the pure reducer and evaluates the restriction engine after accepted foreground events. Its state and latest decision are exposed through a read-only `StateFlow`.
+
+The production runtime begins with the versioned observation profile, which has no shared-session policy. This wires monitoring without activating arbitrary example durations. A later durable profile source must activate configured restrictions explicitly.
 
 UsageStats source implementations do not write directly to Room. They emit source observations that are normalized through domain contracts. The app module composes monitoring and persistence implementations while monitoring and data remain independent sibling modules.
 
 Historical events must be ordered, deduplicated and normalized before they affect durable projections. Android does not provide one universal event identifier, so deduplication is deterministic but must not be described as infallible.
+
+The runtime composition and its limitations are recorded in ADR-010.
 
 ## Collection reconciliation
 
@@ -110,11 +119,11 @@ The block UI must show:
 
 The exact enforcement mechanism requires real-device validation across supported Android versions.
 
-The accessibility foreground-signal increment does not implement blocking, session limits or cooldowns.
+The shared-session runtime currently observes decisions only. It does not start cooldowns, persist restriction state, record blocked attempts or launch a blocking interface.
 
 ## Foreground execution
 
-The observation foundation and accessibility foreground-signal service do not introduce a permanent foreground service or aggressive polling loop.
+The observation foundation, accessibility foreground-signal service and process runtime do not introduce a permanent foreground service or aggressive polling loop.
 
 A foreground service is used only when continuous execution is necessary for a concrete user-visible feature and compliant with the targeted Android version.
 
@@ -141,7 +150,7 @@ During observation, durable recovery reconstructs:
 - permission and monitoring health;
 - persistent reconciliation work.
 
-Accessibility signals are intentionally transient. After a process or service interruption, UsageStats reconstructs durable history while the restriction engine must restore its own persisted session and cooldown state in later increments.
+Accessibility signals and the current shared-session runtime snapshot are intentionally process-local. After a process or service interruption, UsageStats reconstructs durable observation history while later increments must restore persisted restriction session and cooldown state.
 
 Later increments also reconstruct:
 
@@ -157,6 +166,8 @@ WorkManager is the default owner of persistent deferrable reconciliation. A boot
 The integration layer forwards wall-clock and time-zone changes to the domain. Elapsed durations use monotonic time while the process is alive. Persisted expiry data must include enough information to avoid shortening restrictions through simple clock changes.
 
 Accessibility foreground signals contain both the current wall-clock instant and Android elapsed realtime. The monotonic value is transient and resets on reboot; it must not be treated as a durable timestamp.
+
+The runtime uses Android elapsed realtime only for runtime-owned transitions such as ending an active session after a profile change. Foreground monitoring events retain their source timestamps unchanged.
 
 Observation events preserve source wall-clock timestamps. Daily projections use an explicit local-day interpretation so time-zone changes can be handled deterministically and raw observations can be replayed if aggregation rules change.
 
@@ -185,10 +196,11 @@ Before the first useful release, testing must include:
 - proof that window content and accessibility nodes are not requested;
 - repeated overlapping reconciliation;
 - rapid switching between monitored applications;
+- explicit background and recovery event correction;
 - screen lock and unlock;
 - time and time-zone changes;
 - package visibility behavior;
 - battery-optimization behavior;
 - supported Android-version boundaries.
 
-The observation architecture and its trade-offs are recorded in ADR-007. Accessibility foreground monitoring is recorded in ADR-008.
+The observation architecture and its trade-offs are recorded in ADR-007. Accessibility foreground monitoring is recorded in ADR-008. Shared-session runtime composition is recorded in ADR-010.

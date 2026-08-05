@@ -115,9 +115,15 @@ Deliver the first version that actively interrupts doomscrolling.
 - pure deterministic shared-session reducer;
 - pure ordered restriction engine with explicit priorities and secondary reasons;
 - `SessionLimitRule` with a stable block reason and boundary behavior;
-- unit coverage for cross-application continuity, inactivity, duplicate and stale events, limit boundaries and rule priorities.
+- domain contracts for active profiles, shared-session event sources and runtime snapshots;
+- accessibility foreground-signal adapter preserving wall-clock and elapsed-realtime timestamps;
+- application-lifetime shared-session runtime with serialized profile and event processing;
+- reducer and restriction-engine evaluation connected after accepted foreground events;
+- versioned observation profile as the safe production default without an active restriction policy;
+- explicit active-session termination when the restriction profile changes;
+- unit coverage for cross-application continuity, inactivity, duplicate and stale events, limit boundaries, runtime startup, profile transitions and rule priorities.
 
-The current shared-session foundation is not connected to Android enforcement, does not persist restriction state and does not start a cooldown yet.
+The current runtime is connected to low-latency foreground signals but does not yet receive a trustworthy explicit background correction source. It remains process-local, does not persist restriction state, does not start a cooldown and does not enforce a blocking decision.
 
 ### Exit criteria
 

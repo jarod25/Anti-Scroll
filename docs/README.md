@@ -23,6 +23,7 @@ This directory contains the technical documentation used as the development refe
 - [`ADR-007`](adr/007-observation-monitoring-and-recovery.md): define observation sources, normalized persistence and recovery.
 - [`ADR-008`](adr/008-accessibility-foreground-monitoring.md): use accessibility only as a transient foreground signal.
 - [`ADR-009`](adr/009-explicit-shared-session-transitions.md): model shared sessions through explicit deterministic transitions.
+- [`ADR-010`](adr/010-shared-session-runtime-composition.md): compose the process runtime from explicit event and profile sources.
 
 ## Documentation rules
 

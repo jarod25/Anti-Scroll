@@ -92,6 +92,28 @@ Elapsed realtime is used for active duration arithmetic because it is monotonic 
 
 The detailed decision is recorded in ADR-009.
 
+## Process runtime
+
+`SharedSessionRuntime` is the app-layer coordinator connecting monitoring adapters to the pure reducer and rule engine.
+
+It consumes:
+
+- a `RestrictionProfileSource` exposing the current versioned profile;
+- one or more `SharedSessionEventSource` flows;
+- `SharedSessionReducer` for explicit state transitions;
+- `RestrictionEngine` for foreground-entry decisions;
+- controlled wall-clock and elapsed-realtime readings for runtime-owned transitions.
+
+Profile observations and events are serialized before state mutation. A foreground event is reduced first, then evaluated against the resulting immutable state. Stale foreground events remain unevaluated because their timestamp precedes the state already accepted by the reducer.
+
+The runtime publishes `SharedSessionRuntimeSnapshot` values containing the active profile, current state, latest transition and latest decision. It does not enforce the decision, persist state or start a cooldown.
+
+The production runtime initially uses an observation profile without a shared-session policy. This means monitoring can be wired and tested without silently activating an example restriction value. A later durable profile source will activate configured policies explicitly.
+
+Changing the profile ends an active shared session with `PROFILE_CHANGED` before the new profile becomes current. Future background, reconciliation and restoration adapters can implement `SharedSessionEventSource` without obtaining direct access to mutable runtime state.
+
+The detailed composition decision is recorded in ADR-010.
+
 ## State transitions
 
 Evaluation and state mutation are separate concerns:
@@ -128,6 +150,8 @@ Existing rules should not require modification.
 - shared-session application switches;
 - duplicate, stale and irrelevant monitoring events;
 - inactivity timeout boundaries;
+- runtime event-source adaptation and serialization;
+- runtime startup and profile transitions;
 - midnight and scheduled periods crossing days;
 - controlled time-zone changes;
 - profile transitions;
