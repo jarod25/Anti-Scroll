@@ -253,9 +253,7 @@ private fun usageAccessPresentation(status: UsageAccessStatus): PermissionPresen
     )
 }
 
-private fun accessibilityPresentation(
-    status: AccessibilityMonitoringStatus
-): PermissionPresentation = when (status) {
+private fun accessibilityPresentation(status: AccessibilityMonitoringStatus): PermissionPresentation = when (status) {
     AccessibilityMonitoringStatus.DISABLED -> PermissionPresentation(
         statusRes = R.string.accessibility_disabled,
         descriptionRes = R.string.accessibility_disabled_description,
