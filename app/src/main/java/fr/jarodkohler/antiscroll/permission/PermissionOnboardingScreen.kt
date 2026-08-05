@@ -36,6 +36,7 @@ object PermissionOnboardingTestTags {
     const val USAGE_ACCESS_BUTTON = "usage_access_button"
     const val SETTINGS_ERROR = "settings_error"
     const val ACCESSIBILITY_CARD = "accessibility_card"
+    const val ACCESSIBILITY_BUTTON = "accessibility_button"
 }
 
 @Composable
@@ -43,9 +44,13 @@ fun PermissionOnboardingScreen(
     permissionSnapshot: MonitoringPermissionSnapshot,
     settingsLaunchFailed: Boolean,
     onOpenUsageAccessSettings: () -> Unit,
+    onOpenAccessibilitySettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val usageAccessPresentation = usageAccessPresentation(permissionSnapshot.usageAccessStatus)
+    val accessibilityPresentation = accessibilityPresentation(
+        permissionSnapshot.accessibilityStatus
+    )
 
     Column(
         modifier = modifier
@@ -83,6 +88,24 @@ fun PermissionOnboardingScreen(
                 }
             }
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        PermissionCard(
+            title = stringResource(R.string.accessibility_title),
+            status = stringResource(accessibilityPresentation.statusRes),
+            description = stringResource(accessibilityPresentation.descriptionRes),
+            testTag = PermissionOnboardingTestTags.ACCESSIBILITY_CARD,
+            supportingLabel = stringResource(R.string.accessibility_realtime_label),
+            action = {
+                Button(
+                    onClick = onOpenAccessibilitySettings,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(PermissionOnboardingTestTags.ACCESSIBILITY_BUTTON)
+                ) {
+                    Text(text = stringResource(accessibilityPresentation.buttonRes))
+                }
+            }
+        )
         if (settingsLaunchFailed) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
@@ -92,16 +115,6 @@ fun PermissionOnboardingScreen(
                 color = MaterialTheme.colorScheme.error
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        PermissionCard(
-            title = stringResource(R.string.accessibility_title),
-            status = stringResource(
-                accessibilityStatusRes(permissionSnapshot.accessibilityStatus)
-            ),
-            description = stringResource(R.string.accessibility_description),
-            testTag = PermissionOnboardingTestTags.ACCESSIBILITY_CARD,
-            supportingLabel = stringResource(R.string.accessibility_optional)
-        )
     }
 }
 
@@ -208,45 +221,68 @@ private fun PermissionCard(
     }
 }
 
-private data class UsageAccessPresentation(
-    @StringRes val statusRes: Int,
-    @StringRes val descriptionRes: Int,
-    @StringRes val buttonRes: Int
+private data class PermissionPresentation(
+    @param:StringRes val statusRes: Int,
+    @param:StringRes val descriptionRes: Int,
+    @param:StringRes val buttonRes: Int
 )
 
-private fun usageAccessPresentation(status: UsageAccessStatus): UsageAccessPresentation = when (status) {
-    UsageAccessStatus.GRANTED -> UsageAccessPresentation(
+private fun usageAccessPresentation(status: UsageAccessStatus): PermissionPresentation = when (status) {
+    UsageAccessStatus.GRANTED -> PermissionPresentation(
         statusRes = R.string.usage_access_granted,
         descriptionRes = R.string.usage_access_granted_description,
         buttonRes = R.string.review_usage_access_settings
     )
 
-    UsageAccessStatus.MISSING -> UsageAccessPresentation(
+    UsageAccessStatus.MISSING -> PermissionPresentation(
         statusRes = R.string.usage_access_required,
         descriptionRes = R.string.usage_access_required_description,
         buttonRes = R.string.open_usage_access_settings
     )
 
-    UsageAccessStatus.UNAVAILABLE -> UsageAccessPresentation(
+    UsageAccessStatus.UNAVAILABLE -> PermissionPresentation(
         statusRes = R.string.usage_access_unavailable,
         descriptionRes = R.string.usage_access_unavailable_description,
         buttonRes = R.string.open_usage_access_settings
     )
 
-    UsageAccessStatus.ERROR -> UsageAccessPresentation(
+    UsageAccessStatus.ERROR -> PermissionPresentation(
         statusRes = R.string.usage_access_error,
         descriptionRes = R.string.usage_access_error_description,
         buttonRes = R.string.review_usage_access_settings
     )
 }
 
-@StringRes
-private fun accessibilityStatusRes(status: AccessibilityMonitoringStatus): Int = when (status) {
-    AccessibilityMonitoringStatus.DISABLED -> R.string.accessibility_disabled
-    AccessibilityMonitoringStatus.ENABLED -> R.string.accessibility_enabled
-    AccessibilityMonitoringStatus.DISCONNECTED -> R.string.accessibility_disconnected
-    AccessibilityMonitoringStatus.UNSUPPORTED -> R.string.accessibility_unsupported
-    AccessibilityMonitoringStatus.ERROR -> R.string.accessibility_error
+private fun accessibilityPresentation(status: AccessibilityMonitoringStatus): PermissionPresentation = when (status) {
+    AccessibilityMonitoringStatus.DISABLED -> PermissionPresentation(
+        statusRes = R.string.accessibility_disabled,
+        descriptionRes = R.string.accessibility_disabled_description,
+        buttonRes = R.string.open_accessibility_settings
+    )
+
+    AccessibilityMonitoringStatus.ENABLED -> PermissionPresentation(
+        statusRes = R.string.accessibility_enabled,
+        descriptionRes = R.string.accessibility_enabled_description,
+        buttonRes = R.string.review_accessibility_settings
+    )
+
+    AccessibilityMonitoringStatus.DISCONNECTED -> PermissionPresentation(
+        statusRes = R.string.accessibility_disconnected,
+        descriptionRes = R.string.accessibility_disconnected_description,
+        buttonRes = R.string.review_accessibility_settings
+    )
+
+    AccessibilityMonitoringStatus.UNSUPPORTED -> PermissionPresentation(
+        statusRes = R.string.accessibility_unsupported,
+        descriptionRes = R.string.accessibility_unsupported_description,
+        buttonRes = R.string.open_accessibility_settings
+    )
+
+    AccessibilityMonitoringStatus.ERROR -> PermissionPresentation(
+        statusRes = R.string.accessibility_error,
+        descriptionRes = R.string.accessibility_error_description,
+        buttonRes = R.string.review_accessibility_settings
+    )
 }
 
 @Preview(showBackground = true)
@@ -256,10 +292,11 @@ private fun PermissionOnboardingScreenPreview() {
         PermissionOnboardingScreen(
             permissionSnapshot = MonitoringPermissionSnapshot(
                 usageAccessStatus = UsageAccessStatus.MISSING,
-                accessibilityStatus = AccessibilityMonitoringStatus.UNSUPPORTED
+                accessibilityStatus = AccessibilityMonitoringStatus.DISABLED
             ),
             settingsLaunchFailed = false,
-            onOpenUsageAccessSettings = {}
+            onOpenUsageAccessSettings = {},
+            onOpenAccessibilitySettings = {}
         )
     }
 }

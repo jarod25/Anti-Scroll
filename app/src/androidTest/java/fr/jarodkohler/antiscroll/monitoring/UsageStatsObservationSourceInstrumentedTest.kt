@@ -10,6 +10,7 @@ import fr.jarodkohler.antiscroll.domain.observation.ObservationWindow
 import fr.jarodkohler.antiscroll.domain.observation.UsageAccessStatus
 import fr.jarodkohler.antiscroll.domain.observation.UsageCollectionResult
 import fr.jarodkohler.antiscroll.domain.observation.UsageEventType
+import fr.jarodkohler.antiscroll.monitoring.accessibility.AccessibilityMonitoringConnection
 import fr.jarodkohler.antiscroll.monitoring.permission.AndroidMonitoringPermissionReader
 import fr.jarodkohler.antiscroll.monitoring.usagestats.AndroidUsageStatsEventGateway
 import fr.jarodkohler.antiscroll.monitoring.usagestats.UsageStatsEventNormalizer
@@ -27,7 +28,10 @@ class UsageStatsObservationSourceInstrumentedTest {
     fun recentTargetActivityIsCollectedAndNormalized() = runBlocking {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
-        val permissionReader = AndroidMonitoringPermissionReader(context)
+        val permissionReader = AndroidMonitoringPermissionReader(
+            context = context,
+            accessibilityConnection = AccessibilityMonitoringConnection()
+        )
         assumeTrue(permissionReader.read().usageAccessStatus == UsageAccessStatus.GRANTED)
 
         val windowStart = Instant.now().minusSeconds(5)

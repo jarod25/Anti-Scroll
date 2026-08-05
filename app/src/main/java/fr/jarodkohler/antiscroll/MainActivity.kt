@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
                         dashboardUiState = dashboardUiState,
                         settingsLaunchFailed = settingsLaunchFailed,
                         onOpenUsageAccessSettings = ::openUsageAccessSettings,
+                        onOpenAccessibilitySettings = ::openAccessibilitySettings,
                         onSetApplicationEnabled = viewModel::setApplicationEnabled,
                         onRetryApplications = viewModel::refresh,
                         onRefreshDashboard = ::refreshObservation,
@@ -70,12 +71,22 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openUsageAccessSettings() {
-        settingsLaunchFailed = false
-
-        val intent = listOf(
+        openFirstAvailableSettings(
             Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS),
             Intent(Settings.ACTION_SETTINGS)
-        ).firstOrNull { candidate ->
+        )
+    }
+
+    private fun openAccessibilitySettings() {
+        openFirstAvailableSettings(
+            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
+            Intent(Settings.ACTION_SETTINGS)
+        )
+    }
+
+    private fun openFirstAvailableSettings(vararg candidates: Intent) {
+        settingsLaunchFailed = false
+        val intent = candidates.firstOrNull { candidate ->
             candidate.resolveActivity(packageManager) != null
         }
 

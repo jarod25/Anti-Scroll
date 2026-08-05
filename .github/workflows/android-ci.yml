@@ -43,7 +43,7 @@ jobs:
         run: |
           mkdir -p build/ci
           set -o pipefail
-          ./gradlew --no-daemon --stacktrace spotlessCheck test lint assembleDebug assembleDebugAndroidTest 2>&1 | tee build/ci/verification.log
+          ./gradlew --no-daemon --stacktrace spotlessCheck test lint assembleDebug assembleDeviceTestAndroidTest 2>&1 | tee build/ci/verification.log
 
       - name: Verify Room schema snapshots
         shell: bash

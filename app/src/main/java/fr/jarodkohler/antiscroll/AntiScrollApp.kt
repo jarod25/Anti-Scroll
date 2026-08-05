@@ -20,7 +20,8 @@ import fr.jarodkohler.antiscroll.permission.PermissionOnboardingScreen
 
 private enum class MainTab(val titleResource: Int) {
     DASHBOARD(R.string.main_tab_dashboard),
-    APPLICATIONS(R.string.main_tab_applications)
+    APPLICATIONS(R.string.main_tab_applications),
+    SETUP(R.string.main_tab_setup)
 }
 
 @Composable
@@ -29,6 +30,7 @@ fun AntiScrollApp(
     dashboardUiState: DashboardUiState,
     settingsLaunchFailed: Boolean,
     onOpenUsageAccessSettings: () -> Unit,
+    onOpenAccessibilitySettings: () -> Unit,
     onSetApplicationEnabled: (ApplicationPackageName, Boolean) -> Unit,
     onRetryApplications: () -> Unit,
     onRefreshDashboard: () -> Unit,
@@ -64,6 +66,14 @@ fun AntiScrollApp(
                     onReviewUsageAccessSettings = onOpenUsageAccessSettings,
                     modifier = Modifier.weight(1f)
                 )
+
+                MainTab.SETUP -> PermissionOnboardingScreen(
+                    permissionSnapshot = uiState.permissionSnapshot,
+                    settingsLaunchFailed = settingsLaunchFailed,
+                    onOpenUsageAccessSettings = onOpenUsageAccessSettings,
+                    onOpenAccessibilitySettings = onOpenAccessibilitySettings,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     } else {
@@ -71,6 +81,7 @@ fun AntiScrollApp(
             permissionSnapshot = uiState.permissionSnapshot,
             settingsLaunchFailed = settingsLaunchFailed,
             onOpenUsageAccessSettings = onOpenUsageAccessSettings,
+            onOpenAccessibilitySettings = onOpenAccessibilitySettings,
             modifier = modifier
         )
     }

@@ -32,7 +32,7 @@ Create a buildable Android project with enforceable quality checks and documente
 
 ## Increment 1 — Observation foundation
 
-**Status: Next**
+**Status: Complete**
 
 ### Goal
 
@@ -41,28 +41,30 @@ Collect trustworthy-enough local usage data and make reliability visible.
 ### Architecture baseline
 
 - UsageStats is the required historical and recovery source;
-- accessibility monitoring is an optional low-latency experiment behind a domain contract;
 - normalized usage observations form the durable journal;
 - daily usage values are rebuildable persisted projections;
 - checkpoints and collection gaps make recovery and uncertainty explicit;
 - WorkManager provides persistent deferrable reconciliation without being treated as a real-time guarantee;
+- foreground duration and intentional-opening estimation remain separate projections;
 - increment 1 introduces no permanent foreground service, broad package-visibility permission or blocking behavior.
 
-The detailed decision is recorded in ADR-007.
+The detailed observation decision is recorded in ADR-007.
 
-### Deliverables
+### Delivered
 
-- onboarding and real permission-health screen;
+- onboarding and real Usage Access health;
 - monitored application configuration from a versioned package catalog;
 - UsageStats integration with API-appropriate query filtering;
-- accessibility monitoring experiment behind an interface;
 - immutable normalized usage events;
 - persisted normalized event journal;
 - persisted daily per-application usage projections;
 - collection checkpoints and explicit gap diagnostics;
 - incremental overlapping reconciliation and deterministic deduplication;
 - process and device restart restoration;
+- package-level session reconstruction;
+- intentional-opening estimation across brief sharing interruptions;
 - minimal observation dashboard;
+- deterministic initial baseline from reliable completed days;
 - local-only data handling.
 
 ### Exit criteria
@@ -72,11 +74,12 @@ The detailed decision is recorded in ADR-007.
 - repeated overlapping reconciliation does not double-count known observations;
 - process recreation and device restart preserve or reconstruct daily totals;
 - missing permission, locked-user state and collection gaps are shown honestly;
-- disabling accessibility does not break UsageStats collection;
 - no unknown period is presented as observed usage;
 - no usage data leaves the device.
 
 ## Increment 2 — Shared sessions and cooldowns
+
+**Status: In progress**
 
 ### Goal
 
@@ -84,6 +87,7 @@ Deliver the first version that actively interrupts doomscrolling.
 
 ### Deliverables
 
+- minimal accessibility service for low-latency foreground signals;
 - shared cross-application sessions;
 - configurable session limit;
 - configurable global cooldown;
@@ -96,6 +100,7 @@ Deliver the first version that actively interrupts doomscrolling.
 
 ### Exit criteria
 
+- the accessibility service observes only package-level foreground signals for selected applications and cannot retrieve window content;
 - switching monitored applications does not reset the session;
 - reaching the limit starts one global cooldown;
 - all monitored applications stay blocked during the cooldown;
