@@ -59,7 +59,10 @@
     <string name="dashboard_baseline_title">Initial observation</string>
     <string name="dashboard_baseline_loading">Calculating observation progress…</string>
     <string name="dashboard_baseline_not_started">Choose at least one monitored application to start learning your habits.</string>
-    <string name="dashboard_baseline_progress">%1$d of %2$d reliable days collected</string>
+    <plurals name="dashboard_baseline_progress">
+        <item quantity="one">%1$d of %2$d reliable day collected</item>
+        <item quantity="other">%1$d of %2$d reliable days collected</item>
+    </plurals>
     <string name="dashboard_baseline_collecting_body">Only completed days with reliable data count. Partial days are skipped instead of distorting your future limits.</string>
     <string name="dashboard_baseline_ready">Personal baseline ready</string>
     <plurals name="dashboard_baseline_typical_day">
