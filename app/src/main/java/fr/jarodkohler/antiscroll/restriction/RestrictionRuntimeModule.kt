@@ -12,6 +12,7 @@ import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionRuntimeStateSou
 import fr.jarodkohler.antiscroll.engine.restriction.RestrictionEngine
 import fr.jarodkohler.antiscroll.engine.restriction.SessionLimitRule
 import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionReducer
+import java.time.Duration
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +34,12 @@ abstract class RestrictionRuntimeBindingModule {
     @IntoSet
     abstract fun bindForegroundSharedSessionEventSource(
         source: ForegroundSignalSharedSessionEventSource
+    ): SharedSessionEventSource
+
+    @Binds
+    @IntoSet
+    abstract fun bindUsageStatsSharedSessionEventSource(
+        source: UsageStatsSharedSessionEventSource
     ): SharedSessionEventSource
 
     @Binds
@@ -59,4 +66,12 @@ object RestrictionRuntimeProvisionModule {
     @Provides
     @Singleton
     fun provideRestrictionEngine(): RestrictionEngine = RestrictionEngine(rules = listOf(SessionLimitRule()))
+
+    @Provides
+    @Singleton
+    fun provideUsageStatsSessionReconciliationPolicy(): UsageStatsSessionReconciliationPolicy =
+        UsageStatsSessionReconciliationPolicy(
+            pollingInterval = Duration.ofSeconds(2),
+            overlap = Duration.ofSeconds(5)
+        )
 }
