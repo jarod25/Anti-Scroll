@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Anti-Scroll</string>
     <string name="permission_onboarding_title">Set up monitoring</string>
     <string name="permission_onboarding_body">Anti-Scroll combines Android usage history with a minimal accessibility service. Usage history remains the durable source; accessibility provides only a faster foreground signal for selected scrolling applications.</string>
@@ -59,10 +59,10 @@
     <string name="dashboard_baseline_title">Initial observation</string>
     <string name="dashboard_baseline_loading">Calculating observation progress…</string>
     <string name="dashboard_baseline_not_started">Choose at least one monitored application to start learning your habits.</string>
-    <plurals name="dashboard_baseline_progress">
-        <item quantity="one">%1$d of %2$d reliable day collected</item>
-        <item quantity="other">%1$d of %2$d reliable days collected</item>
-    </plurals>
+    <!-- The noun phrase belongs to the second quantity: "1 of 7 reliable days" is intentionally plural. -->
+    <string
+        name="dashboard_baseline_progress"
+        tools:ignore="PluralsCandidate">%1$d of %2$d reliable days collected</string>
     <string name="dashboard_baseline_collecting_body">Only completed days with reliable data count. Partial days are skipped instead of distorting your future limits.</string>
     <string name="dashboard_baseline_ready">Personal baseline ready</string>
     <plurals name="dashboard_baseline_typical_day">
