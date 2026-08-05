@@ -109,7 +109,8 @@ constructor(
                                 retainFrom = queryStart,
                                 processThrough = clockSnapshot.observedAt.minus(
                                     reconciliationPolicy.eventSettlementDelay
-                                )
+                                ),
+                                settlementWindow = reconciliationPolicy.eventSettlementDelay
                             )
                         }
                         corrections.forEach { event -> send(event) }
