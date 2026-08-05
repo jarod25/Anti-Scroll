@@ -53,16 +53,32 @@ Release branches target `main` only when a version is ready for delivery. Releas
 Run the same core tasks used by continuous integration:
 
 ```powershell
-.\gradlew.bat spotlessCheck test lint assembleDebug assembleDebugAndroidTest
+.\gradlew.bat spotlessCheck test lint assembleDebug assembleDeviceTestAndroidTest
 ```
 
 On Linux or macOS:
 
 ```bash
-./gradlew spotlessCheck test lint assembleDebug assembleDebugAndroidTest
+./gradlew spotlessCheck test lint assembleDebug assembleDeviceTestAndroidTest
 ```
 
 The build must use the committed Gradle Wrapper. A locally installed Gradle version is not part of the supported workflow.
+
+### Physical-device instrumentation tests
+
+Run instrumentation tests with the dedicated `deviceTest` build type:
+
+```powershell
+.\gradlew.bat :app:connectedDeviceTestAndroidTest
+```
+
+On Linux or macOS:
+
+```bash
+./gradlew :app:connectedDeviceTestAndroidTest
+```
+
+The tested application uses the separate application identifier `fr.jarodkohler.antiscroll.instrumented` and appears as **Anti-Scroll Test**. Gradle may install and uninstall this test-only application during execution without replacing the regular Anti-Scroll installation or deleting its local data.
 
 ## Formatting
 
@@ -115,7 +131,7 @@ Every pull request must pass:
 - unit tests;
 - Android lint;
 - debug application APK assembly;
-- debug instrumentation-test APK assembly;
+- isolated device-test application and instrumentation-test APK assembly;
 - Room schema snapshot synchronization when persistence definitions change;
 - Gradle Wrapper checksum validation performed by the Gradle setup action;
 - review of the affected documentation and architecture decisions.
