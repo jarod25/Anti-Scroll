@@ -35,6 +35,19 @@ class UsageStatsSharedSessionEventTrackerTest {
     }
 
     @Test
+    fun unmatchedPauseRemainsReplayableUntilAccessibilityHintArrives() {
+        val tracker = UsageStatsSharedSessionEventTracker()
+        val paused = record(UsageStatsActivityEventType.PAUSED, second = 10, activity = "FeedActivity")
+
+        val beforeHint = tracker.acceptSettled(records = listOf(paused))
+        tracker.markForeground(tikTok)
+        val afterHint = tracker.acceptSettled(records = listOf(paused))
+
+        assertTrue(beforeHint.isEmpty())
+        assertTrue(afterHint.single() is SharedSessionEvent.ApplicationBackgrounded)
+    }
+
+    @Test
     fun activityReplacementWithinSettlementWindowDoesNotPausePackage() {
         val tracker = UsageStatsSharedSessionEventTracker()
         tracker.markForeground(tikTok)
