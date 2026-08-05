@@ -78,14 +78,11 @@ class RestrictionEngineTest {
         assertEquals(engine.evaluate(context), engine.evaluate(context))
     }
 
-    private fun fixedRule(result: RestrictionRuleResult): RestrictionRule =
-        RestrictionRule { result }
+    private fun fixedRule(result: RestrictionRuleResult): RestrictionRule = RestrictionRule { result }
 
-    private fun blocked(
-        reason: String,
-        priority: RestrictionPriority
-    ): RestrictionRuleResult = RestrictionRuleResult.blocked(
-        priority = priority,
-        reasonCode = RestrictionReasonCode(reason)
-    )
+    private fun blocked(reason: String, priority: RestrictionPriority): RestrictionRuleResult =
+        RestrictionRuleResult.blocked(
+            priority = priority,
+            reasonCode = RestrictionReasonCode(reason)
+        )
 }
