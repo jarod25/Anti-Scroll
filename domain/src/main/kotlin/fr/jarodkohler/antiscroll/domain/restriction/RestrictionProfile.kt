@@ -14,10 +14,7 @@ value class RestrictionProfileIdentifier(val value: String) {
     override fun toString(): String = value
 }
 
-data class SharedSessionPolicy(
-    val maximumDuration: Duration,
-    val inactivityTimeout: Duration
-) {
+data class SharedSessionPolicy(val maximumDuration: Duration, val inactivityTimeout: Duration) {
     init {
         require(maximumDuration > Duration.ZERO) {
             "Shared session maximum duration must be positive"
