@@ -149,20 +149,18 @@ class SharedSessionReducerTest {
     private fun foreground(
         packageName: ApplicationPackageName,
         minute: Long
-    ): SharedSessionEvent.ApplicationForegrounded =
-        SharedSessionEvent.ApplicationForegrounded(
-            packageName = packageName,
-            observedAt = origin.plusSeconds(minute * 60),
-            elapsedRealtime = Duration.ofMinutes(minute)
-        )
+    ): SharedSessionEvent.ApplicationForegrounded = SharedSessionEvent.ApplicationForegrounded(
+        packageName = packageName,
+        observedAt = origin.plusSeconds(minute * 60),
+        elapsedRealtime = Duration.ofMinutes(minute)
+    )
 
     private fun background(
         packageName: ApplicationPackageName,
         minute: Long
-    ): SharedSessionEvent.ApplicationBackgrounded =
-        SharedSessionEvent.ApplicationBackgrounded(
-            packageName = packageName,
-            observedAt = origin.plusSeconds(minute * 60),
-            elapsedRealtime = Duration.ofMinutes(minute)
-        )
+    ): SharedSessionEvent.ApplicationBackgrounded = SharedSessionEvent.ApplicationBackgrounded(
+        packageName = packageName,
+        observedAt = origin.plusSeconds(minute * 60),
+        elapsedRealtime = Duration.ofMinutes(minute)
+    )
 }
