@@ -7,10 +7,7 @@ import fr.jarodkohler.antiscroll.monitoring.usagestats.UsageStatsEventRecord
 import java.time.Duration
 import java.time.Instant
 
-internal data class ReconciliationClockSnapshot(
-    val observedAt: Instant,
-    val elapsedRealtime: Duration
-) {
+internal data class ReconciliationClockSnapshot(val observedAt: Instant, val elapsedRealtime: Duration) {
     init {
         require(!elapsedRealtime.isNegative) { "Elapsed realtime must not be negative" }
     }
@@ -43,7 +40,7 @@ internal class UsageStatsSharedSessionEventTracker {
         if (records.isEmpty() || allowedPackages.isEmpty()) return emptyList()
 
         val allowedByValue = allowedPackages.associateBy(ApplicationPackageName::value)
-        val freshRecords = records.withIndex().mapNotNull { indexedRecord ->
+        val candidateRecords = records.withIndex().mapNotNull { indexedRecord ->
             val record = indexedRecord.value
             val packageName = allowedByValue[record.packageName] ?: return@mapNotNull null
             val occurredAt = Instant.ofEpochMilli(record.occurredAtEpochMillis)
@@ -65,12 +62,14 @@ internal class UsageStatsSharedSessionEventTracker {
                 elapsedRealtime = elapsedRealtime,
                 sourceOrder = indexedRecord.index
             )
-        }.sortedWith(
+        }
+        val freshRecords = candidateRecords.sortedWith(
             compareBy<TrackedUsageStatsEvent>(TrackedUsageStatsEvent::occurredAt)
                 .thenBy { event -> event.sourceOrder }
         )
+        val eventsByPackage = freshRecords.groupBy(TrackedUsageStatsEvent::packageName)
 
-        return freshRecords.groupBy(TrackedUsageStatsEvent::packageName)
+        return eventsByPackage
             .flatMap { (_, packageEvents) ->
                 cluster(packageEvents, settlementWindow).mapNotNull(::processCluster)
             }.sortedWith(
@@ -88,8 +87,9 @@ internal class UsageStatsSharedSessionEventTracker {
         events.forEach { event ->
             val currentCluster = clusters.lastOrNull()
             val firstEvent = currentCluster?.firstOrNull()
-            val belongsToCurrentCluster = firstEvent != null &&
-                Duration.between(firstEvent.occurredAt, event.occurredAt) <= settlementWindow
+            val belongsToCurrentCluster = firstEvent?.let { candidate ->
+                Duration.between(candidate.occurredAt, event.occurredAt) <= settlementWindow
+            } ?: false
 
             if (belongsToCurrentCluster) {
                 currentCluster.add(event)
@@ -105,9 +105,7 @@ internal class UsageStatsSharedSessionEventTracker {
         val packageName = events.first().packageName
         val activities = activeActivities.getOrPut(packageName, ::mutableSetOf)
         val wasForeground = activities.isNotEmpty()
-        val containsResume = events.any { event ->
-            event.eventType == UsageStatsActivityEventType.RESUMED
-        }
+        val containsResume = events.any { event -> event.eventType == UsageStatsActivityEventType.RESUMED }
 
         if (!wasForeground && !containsResume) {
             activeActivities.remove(packageName)
@@ -160,10 +158,7 @@ internal class UsageStatsSharedSessionEventTracker {
         return transitionEvent
     }
 
-    private fun elapsedRealtimeFor(
-        occurredAt: Instant,
-        clockSnapshot: ReconciliationClockSnapshot
-    ): Duration? {
+    private fun elapsedRealtimeFor(occurredAt: Instant, clockSnapshot: ReconciliationClockSnapshot): Duration? {
         val eventAge = Duration.between(occurredAt, clockSnapshot.observedAt)
         if (eventAge.isNegative || eventAge > clockSnapshot.elapsedRealtime) return null
         return clockSnapshot.elapsedRealtime.minus(eventAge)
@@ -194,13 +189,14 @@ internal class UsageStatsSharedSessionEventTracker {
         val occurredAtEpochMillis: Long
     ) {
         companion object {
-            fun from(record: UsageStatsEventRecord): UsageStatsEventKey =
-                UsageStatsEventKey(
+            fun from(record: UsageStatsEventRecord): UsageStatsEventKey {
+                return UsageStatsEventKey(
                     packageName = record.packageName,
                     activityClassName = record.activityClassName,
                     eventType = record.eventType,
                     occurredAtEpochMillis = record.occurredAtEpochMillis
                 )
+            }
         }
     }
 
