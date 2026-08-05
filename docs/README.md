@@ -22,6 +22,7 @@ This directory contains the technical documentation used as the development refe
 - [`ADR-006`](adr/006-kotlin-quality-gates.md): enforce Kotlin formatting and define the static-analysis policy.
 - [`ADR-007`](adr/007-observation-monitoring-and-recovery.md): define observation sources, normalized persistence and recovery.
 - [`ADR-008`](adr/008-accessibility-foreground-monitoring.md): use accessibility only as a transient foreground signal.
+- [`ADR-009`](adr/009-explicit-shared-session-transitions.md): model shared sessions through explicit deterministic transitions.
 
 ## Documentation rules
 
