@@ -392,11 +392,7 @@ class SharedSessionRuntimeTest {
             }
         }
 
-        data class Request(
-            val delayDuration: Duration,
-            val action: suspend () -> Unit,
-            var cancelled: Boolean = false
-        )
+        data class Request(val delayDuration: Duration, val action: suspend () -> Unit, var cancelled: Boolean = false)
     }
 
     private data class FakeRuntimeClock(var currentInstant: Instant, var currentElapsedRealtime: Duration) :
