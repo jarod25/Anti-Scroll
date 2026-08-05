@@ -373,10 +373,7 @@ class SharedSessionRuntimeTest {
     private class FakeDeadlineScheduler : SharedSessionDeadlineScheduler {
         val requests = mutableListOf<Request>()
 
-        override fun schedule(
-            delayDuration: Duration,
-            action: suspend () -> Unit
-        ): SharedSessionDeadlineHandle {
+        override fun schedule(delayDuration: Duration, action: suspend () -> Unit): SharedSessionDeadlineHandle {
             val request = Request(delayDuration = delayDuration, action = action)
             requests += request
             return SharedSessionDeadlineHandle {
@@ -388,10 +385,7 @@ class SharedSessionRuntimeTest {
             trigger(requests.lastIndex)
         }
 
-        suspend fun trigger(
-            index: Int,
-            ignoreCancellation: Boolean = false
-        ) {
+        suspend fun trigger(index: Int, ignoreCancellation: Boolean = false) {
             val request = requests[index]
             if (!request.cancelled || ignoreCancellation) {
                 request.action()
