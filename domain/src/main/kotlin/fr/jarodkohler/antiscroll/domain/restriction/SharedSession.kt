@@ -121,10 +121,7 @@ enum class SharedSessionEndReason {
     PROFILE_CHANGED
 }
 
-data class SharedSessionReduction(
-    val state: SharedSessionState,
-    val transition: SharedSessionTransition
-)
+data class SharedSessionReduction(val state: SharedSessionState, val transition: SharedSessionTransition)
 
 sealed interface SharedSessionTransition {
     data class Started(val packageName: ApplicationPackageName) : SharedSessionTransition
@@ -138,9 +135,7 @@ sealed interface SharedSessionTransition {
 
     data class Resumed(val packageName: ApplicationPackageName) : SharedSessionTransition
 
-    data class RestartedAfterInactivity(
-        val packageName: ApplicationPackageName
-    ) : SharedSessionTransition
+    data class RestartedAfterInactivity(val packageName: ApplicationPackageName) : SharedSessionTransition
 
     data class Ended(val reason: SharedSessionEndReason) : SharedSessionTransition
 
