@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.map
 @Singleton
 class ForegroundSignalSharedSessionEventSource
 @Inject
-constructor(signalSource: ForegroundApplicationSignalSource) : SharedSessionEventSource {
+constructor(signalSource: ForegroundApplicationSignalSource) :
+    SharedSessionEventSource {
     override val events: Flow<SharedSessionEvent> = signalSource.signals.map { signal ->
         SharedSessionEvent.ApplicationForegrounded(
             packageName = signal.packageName,
