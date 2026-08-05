@@ -101,10 +101,12 @@ It consumes:
 - a `RestrictionProfileSource` exposing the current versioned profile;
 - one or more `SharedSessionEventSource` flows;
 - `SharedSessionReducer` for explicit state transitions;
-- `RestrictionEngine` for foreground-entry decisions;
-- controlled wall-clock and elapsed-realtime readings for runtime-owned transitions.
+- `RestrictionEngine` for foreground-entry and deadline decisions;
+- `SharedSessionDeadlinePlanner` for the next monotonic session-limit deadline;
+- `SharedSessionDeadlineScheduler` for replaceable one-shot callbacks;
+- controlled wall-clock and elapsed-realtime readings for runtime-owned evaluation.
 
-Profile observations and events are serialized before state mutation. A foreground event is reduced first, then evaluated against the resulting immutable state. Stale foreground events remain unevaluated because their timestamp precedes the state already accepted by the reducer.
+Profile observations, platform events and deadline callbacks are serialized before state or decision updates. A foreground event is reduced first, then evaluated against the resulting immutable state. Stale foreground events remain unevaluated because their timestamp precedes the state already accepted by the reducer.
 
 The runtime publishes `SharedSessionRuntimeSnapshot` values containing the active profile, current state, latest transition and latest decision. It does not enforce the decision, persist state or start a cooldown.
 
@@ -113,6 +115,20 @@ The production runtime initially uses an observation profile without a shared-se
 Changing the profile ends an active shared session with `PROFILE_CHANGED` before the new profile becomes current. Future background, reconciliation and restoration adapters can implement `SharedSessionEventSource` without obtaining direct access to mutable runtime state.
 
 The detailed composition decision is recorded in ADR-010.
+
+## Deadline evaluation
+
+A stable monitored activity may emit no platform event before the configured session limit. The runtime therefore cannot depend on accessibility or UsageStats event frequency as a clock.
+
+`SharedSessionDeadlinePlanner` calculates the elapsed-realtime instant at which the current foreground segment and previously accumulated foreground duration reach the configured maximum. Inactive and paused sessions produce no deadline.
+
+The app layer schedules one replaceable callback for that instant. Any relevant session or profile change cancels the previous callback and computes a new one. A generation number prevents a cancelled callback from overwriting newer state if cancellation races with execution.
+
+When the callback fires, the runtime evaluates the current foreground package and immutable session state at the controlled clocks. This evaluation does not create a synthetic monitoring event, mutate session state or replace the latest transition. An early callback that still produces an allowed decision schedules only the remaining duration. A blocking decision stops further session-limit scheduling.
+
+The scheduler is process-local. Process death, reboot restoration, cooldown creation and Android enforcement remain separate later responsibilities.
+
+The detailed scheduling decision is recorded in ADR-012.
 
 ## State transitions
 
@@ -151,6 +167,8 @@ Existing rules should not require modification.
 - duplicate, stale and irrelevant monitoring events;
 - inactivity timeout boundaries;
 - runtime event-source adaptation and serialization;
+- exact deadline evaluation without another platform event;
+- early, cancelled and stale deadline callbacks;
 - runtime startup and profile transitions;
 - midnight and scheduled periods crossing days;
 - controlled time-zone changes;
