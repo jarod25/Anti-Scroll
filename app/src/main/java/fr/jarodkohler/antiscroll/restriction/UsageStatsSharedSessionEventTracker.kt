@@ -189,14 +189,12 @@ internal class UsageStatsSharedSessionEventTracker {
         val occurredAtEpochMillis: Long
     ) {
         companion object {
-            fun from(record: UsageStatsEventRecord): UsageStatsEventKey {
-                return UsageStatsEventKey(
-                    packageName = record.packageName,
-                    activityClassName = record.activityClassName,
-                    eventType = record.eventType,
-                    occurredAtEpochMillis = record.occurredAtEpochMillis
-                )
-            }
+            fun from(record: UsageStatsEventRecord): UsageStatsEventKey = UsageStatsEventKey(
+                packageName = record.packageName,
+                activityClassName = record.activityClassName,
+                eventType = record.eventType,
+                occurredAtEpochMillis = record.occurredAtEpochMillis
+            )
         }
     }
 
