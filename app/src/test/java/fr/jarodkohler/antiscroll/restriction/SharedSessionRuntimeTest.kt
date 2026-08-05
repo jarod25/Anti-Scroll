@@ -204,22 +204,20 @@ class SharedSessionRuntimeTest {
     private fun foreground(
         packageName: ApplicationPackageName,
         minute: Long
-    ): SharedSessionEvent.ApplicationForegrounded =
-        SharedSessionEvent.ApplicationForegrounded(
-            packageName = packageName,
-            observedAt = origin.plusSeconds(minute * 60),
-            elapsedRealtime = Duration.ofMinutes(minute)
-        )
+    ): SharedSessionEvent.ApplicationForegrounded = SharedSessionEvent.ApplicationForegrounded(
+        packageName = packageName,
+        observedAt = origin.plusSeconds(minute * 60),
+        elapsedRealtime = Duration.ofMinutes(minute)
+    )
 
     private fun background(
         packageName: ApplicationPackageName,
         minute: Long
-    ): SharedSessionEvent.ApplicationBackgrounded =
-        SharedSessionEvent.ApplicationBackgrounded(
-            packageName = packageName,
-            observedAt = origin.plusSeconds(minute * 60),
-            elapsedRealtime = Duration.ofMinutes(minute)
-        )
+    ): SharedSessionEvent.ApplicationBackgrounded = SharedSessionEvent.ApplicationBackgrounded(
+        packageName = packageName,
+        observedAt = origin.plusSeconds(minute * 60),
+        elapsedRealtime = Duration.ofMinutes(minute)
+    )
 
     private class FakeRestrictionProfileSource(initialProfile: RestrictionProfile) : RestrictionProfileSource {
         private val mutableActiveProfile = MutableStateFlow(initialProfile)
@@ -241,10 +239,8 @@ class SharedSessionRuntimeTest {
         }
     }
 
-    private data class FakeRuntimeClock(
-        var currentInstant: Instant,
-        var currentElapsedRealtime: Duration
-    ) : SharedSessionRuntimeClock {
+    private data class FakeRuntimeClock(var currentInstant: Instant, var currentElapsedRealtime: Duration) :
+        SharedSessionRuntimeClock {
         override fun now(): Instant = currentInstant
 
         override fun elapsedRealtime(): Duration = currentElapsedRealtime
