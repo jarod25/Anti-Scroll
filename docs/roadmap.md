@@ -121,9 +121,13 @@ Deliver the first version that actively interrupts doomscrolling.
 - reducer and restriction-engine evaluation connected after accepted foreground events;
 - versioned observation profile as the safe production default without an active restriction policy;
 - explicit active-session termination when the restriction profile changes;
-- unit coverage for cross-application continuity, inactivity, duplicate and stale events, limit boundaries, runtime startup, profile transitions and rule priorities.
+- bounded UsageStats reconciliation for explicit monitored-package foreground and background corrections;
+- activity-level aggregation preventing false package exits during internal Activity changes;
+- overlapping-window deduplication and guarded wall-clock-to-elapsed-realtime mapping;
+- reconciliation disabled automatically while no shared-session policy is active;
+- unit coverage for cross-application continuity, inactivity, duplicate and stale events, limit boundaries, runtime startup, profile transitions, rule priorities and UsageStats correction behavior.
 
-The current runtime is connected to low-latency foreground signals but does not yet receive a trustworthy explicit background correction source. It remains process-local, does not persist restriction state, does not start a cooldown and does not enforce a blocking decision.
+The runtime now receives low-latency accessibility entries and bounded UsageStats corrections without broadening accessibility to unrelated packages. It remains process-local, does not persist restriction state, does not start a cooldown, does not evaluate time progression without a new event and does not enforce a blocking decision.
 
 ### Exit criteria
 
