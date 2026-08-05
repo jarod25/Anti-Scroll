@@ -27,9 +27,7 @@ annotation class ApplicationCoroutineScope
 abstract class RestrictionRuntimeBindingModule {
     @Binds
     @Singleton
-    abstract fun bindRestrictionProfileSource(
-        source: InMemoryRestrictionProfileSource
-    ): RestrictionProfileSource
+    abstract fun bindRestrictionProfileSource(source: InMemoryRestrictionProfileSource): RestrictionProfileSource
 
     @Binds
     @IntoSet
@@ -39,15 +37,11 @@ abstract class RestrictionRuntimeBindingModule {
 
     @Binds
     @Singleton
-    abstract fun bindSharedSessionRuntimeStateSource(
-        runtime: SharedSessionRuntime
-    ): SharedSessionRuntimeStateSource
+    abstract fun bindSharedSessionRuntimeStateSource(runtime: SharedSessionRuntime): SharedSessionRuntimeStateSource
 
     @Binds
     @Singleton
-    abstract fun bindSharedSessionRuntimeClock(
-        clock: AndroidSharedSessionRuntimeClock
-    ): SharedSessionRuntimeClock
+    abstract fun bindSharedSessionRuntimeClock(clock: AndroidSharedSessionRuntimeClock): SharedSessionRuntimeClock
 }
 
 @Module
@@ -56,8 +50,7 @@ object RestrictionRuntimeProvisionModule {
     @Provides
     @Singleton
     @ApplicationCoroutineScope
-    fun provideApplicationCoroutineScope(): CoroutineScope =
-        CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    fun provideApplicationCoroutineScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     @Provides
     @Singleton
@@ -65,6 +58,5 @@ object RestrictionRuntimeProvisionModule {
 
     @Provides
     @Singleton
-    fun provideRestrictionEngine(): RestrictionEngine =
-        RestrictionEngine(rules = listOf(SessionLimitRule()))
+    fun provideRestrictionEngine(): RestrictionEngine = RestrictionEngine(rules = listOf(SessionLimitRule()))
 }
