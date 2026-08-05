@@ -23,7 +23,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    testBuildType = "deviceTest"
+
     buildTypes {
+        create("deviceTest") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".instrumented"
+            versionNameSuffix = "-instrumented"
+            matchingFallbacks += listOf("debug")
+        }
         release {
             optimization {
                 enable = false
@@ -76,4 +84,6 @@ dependencies {
     androidTestImplementation(libs.kotlinx.coroutines.core)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    add("deviceTestImplementation", libs.androidx.compose.ui.test.manifest)
+    add("deviceTestImplementation", libs.androidx.compose.ui.tooling)
 }
