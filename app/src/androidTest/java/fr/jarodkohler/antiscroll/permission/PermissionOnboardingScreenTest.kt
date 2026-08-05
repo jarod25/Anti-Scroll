@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import fr.jarodkohler.antiscroll.domain.observation.AccessibilityMonitoringStatus
 import fr.jarodkohler.antiscroll.domain.observation.UsageAccessStatus
@@ -77,9 +78,11 @@ class PermissionOnboardingScreenTest {
         composeRule.onNodeWithText("Granted").assertIsDisplayed()
         composeRule.onNodeWithText("Disconnected").assertIsDisplayed()
         composeRule.onNodeWithTag(PermissionOnboardingTestTags.ACCESSIBILITY_BUTTON)
+            .performScrollTo()
             .assertIsDisplayed()
             .performClick()
         composeRule.onNodeWithTag(PermissionOnboardingTestTags.SETTINGS_ERROR)
+            .performScrollTo()
             .assertIsDisplayed()
 
         composeRule.runOnIdle {
