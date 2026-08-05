@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Anti-Scroll Test</string>
+    <string name="accessibility_service_label">Anti-Scroll test monitoring</string>
+    <string name="accessibility_service_description">Test-only foreground monitoring service. It is installed under a separate application identifier and does not replace the regular Anti-Scroll installation.</string>
+</resources>
