@@ -32,7 +32,7 @@ Create a buildable Android project with enforceable quality checks and documente
 
 ## Increment 1 — Observation foundation
 
-**Status: Complete**
+**Status: Feature complete — validation debt remaining**
 
 ### Goal
 
@@ -60,12 +60,21 @@ The detailed observation decision is recorded in ADR-007.
 - persisted daily per-application usage projections;
 - collection checkpoints and explicit gap diagnostics;
 - incremental overlapping reconciliation and deterministic deduplication;
-- process and device restart restoration;
+- process and device restart restoration mechanisms;
 - package-level session reconstruction;
 - intentional-opening estimation across brief sharing interruptions;
 - minimal observation dashboard;
 - deterministic initial baseline from reliable completed days;
 - local-only data handling.
+
+### Remaining validation debt
+
+- compare Anti-Scroll totals with Android system statistics over a representative full day;
+- validate observation restoration after a complete physical-device reboot and user unlock;
+- validate package-replacement recovery independently from instrumentation-test installation;
+- exercise manufacturer battery restrictions and application hibernation on the reference device.
+
+This debt does not block restriction-engine development, but it must be closed before observation reliability is presented as fully validated for sustained daily use.
 
 ### Exit criteria
 
@@ -97,6 +106,18 @@ Deliver the first version that actively interrupts doomscrolling.
 - recorded blocked-opening attempts;
 - restart recovery;
 - critical unit and integration tests.
+
+### Delivered so far
+
+- accessibility service limited to transient package-level foreground signals;
+- explicit shared-session domain state and transitions;
+- configurable shared-session maximum duration and inactivity timeout in a versioned profile;
+- pure deterministic shared-session reducer;
+- pure ordered restriction engine with explicit priorities and secondary reasons;
+- `SessionLimitRule` with a stable block reason and boundary behavior;
+- unit coverage for cross-application continuity, inactivity, duplicate and stale events, limit boundaries and rule priorities.
+
+The current shared-session foundation is not connected to Android enforcement, does not persist restriction state and does not start a cooldown yet.
 
 ### Exit criteria
 
