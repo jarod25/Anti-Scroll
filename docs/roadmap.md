@@ -125,9 +125,13 @@ Deliver the first version that actively interrupts doomscrolling.
 - activity-level aggregation preventing false package exits during internal Activity changes;
 - overlapping-window deduplication and guarded wall-clock-to-elapsed-realtime mapping;
 - reconciliation disabled automatically while no shared-session policy is active;
-- unit coverage for cross-application continuity, inactivity, duplicate and stale events, limit boundaries, runtime startup, profile transitions, rule priorities and UsageStats correction behavior.
+- pure monotonic shared-session deadline calculation including accumulated foreground duration;
+- replaceable one-shot deadline scheduling without a fixed heartbeat;
+- restriction-engine reevaluation at the configured session limit without requiring another Android event;
+- deadline cancellation and generation validation across pauses, application switches and profile changes;
+- unit coverage for cross-application continuity, inactivity, duplicate and stale events, limit boundaries, runtime startup, profile transitions, rule priorities, UsageStats correction behavior and deadline races.
 
-The runtime now receives low-latency accessibility entries and bounded UsageStats corrections without broadening accessibility to unrelated packages. It remains process-local, does not persist restriction state, does not start a cooldown, does not evaluate time progression without a new event and does not enforce a blocking decision.
+The runtime now receives low-latency accessibility entries, bounded UsageStats corrections and process-local one-shot deadline reevaluation without broadening accessibility to unrelated packages. It still does not persist restriction state, survive process death or reboot, start a cooldown or enforce a blocking decision.
 
 ### Exit criteria
 

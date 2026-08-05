@@ -12,7 +12,9 @@ import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionRuntimeStateSou
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionState
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionTransition
 import fr.jarodkohler.antiscroll.engine.restriction.RestrictionEngine
+import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionDeadlinePlanner
 import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionReducer
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,11 +35,15 @@ constructor(
     private val profileSource: RestrictionProfileSource,
     private val reducer: SharedSessionReducer,
     private val restrictionEngine: RestrictionEngine,
+    private val deadlinePlanner: SharedSessionDeadlinePlanner,
+    private val deadlineScheduler: SharedSessionDeadlineScheduler,
     private val clock: SharedSessionRuntimeClock,
     @param:ApplicationCoroutineScope private val applicationScope: CoroutineScope
 ) : SharedSessionRuntimeStateSource {
     private val started = AtomicBoolean(false)
     private val processingMutex = Mutex()
+    private var deadlineGeneration = 0L
+    private var deadlineHandle: SharedSessionDeadlineHandle? = null
     private val mutableSnapshots = MutableStateFlow(
         SharedSessionRuntimeSnapshot(
             profile = profileSource.activeProfile.value,
@@ -88,6 +94,7 @@ constructor(
                 lastTransition = null,
                 lastDecision = null
             )
+            refreshDeadline()
             return
         }
 
@@ -114,6 +121,7 @@ constructor(
             lastTransition = reduction.transition,
             lastDecision = null
         )
+        refreshDeadline()
     }
 
     private fun processEvent(event: SharedSessionEvent) {
@@ -136,6 +144,65 @@ constructor(
             lastTransition = reduction.transition,
             lastDecision = decision
         )
+        refreshDeadline()
+    }
+
+    private suspend fun onDeadlineReached(generation: Long) {
+        processingMutex.withLock {
+            if (generation != deadlineGeneration) return
+
+            deadlineGeneration += 1
+            deadlineHandle = null
+
+            val current = mutableSnapshots.value
+            val policy = current.profile.sharedSessionPolicy ?: return
+            val activeState = current.state as? SharedSessionState.Active ?: return
+            val packageName = activeState.foregroundApplication ?: return
+            val elapsedRealtime = maxOf(
+                clock.elapsedRealtime(),
+                activeState.lastObservedElapsedRealtime
+            )
+            val decision = restrictionEngine.evaluate(
+                RestrictionEvaluationContext(
+                    targetPackageName = packageName,
+                    evaluatedAt = clock.now(),
+                    elapsedRealtime = elapsedRealtime,
+                    profile = current.profile,
+                    sharedSessionState = activeState
+                )
+            )
+
+            mutableSnapshots.value = current.copy(lastDecision = decision)
+            if (decision is RestrictionDecision.Allowed) {
+                refreshDeadline()
+            }
+        }
+    }
+
+    private fun refreshDeadline() {
+        deadlineGeneration += 1
+        deadlineHandle?.cancel()
+        deadlineHandle = null
+
+        val current = mutableSnapshots.value
+        if (current.lastDecision is RestrictionDecision.Blocked) return
+
+        val policy = current.profile.sharedSessionPolicy ?: return
+        val activeState = current.state as? SharedSessionState.Active ?: return
+        val deadline = deadlinePlanner.plan(activeState, policy) ?: return
+        val currentElapsedRealtime = maxOf(
+            clock.elapsedRealtime(),
+            activeState.lastObservedElapsedRealtime
+        )
+        val delay = maxOf(
+            Duration.ZERO,
+            deadline.elapsedRealtime.minus(currentElapsedRealtime)
+        )
+        val scheduledGeneration = deadlineGeneration
+
+        deadlineHandle = deadlineScheduler.schedule(delay) {
+            onDeadlineReached(scheduledGeneration)
+        }
     }
 
     private fun decisionFor(
