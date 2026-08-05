@@ -106,7 +106,10 @@ constructor(
                                 records = result.records,
                                 allowedPackages = target.packageNames,
                                 clockSnapshot = clockSnapshot,
-                                retainFrom = queryStart
+                                retainFrom = queryStart,
+                                processThrough = clockSnapshot.observedAt.minus(
+                                    reconciliationPolicy.eventSettlementDelay
+                                )
                             )
                         }
                         corrections.forEach { event -> send(event) }
@@ -143,6 +146,7 @@ constructor(
         sessionPolicy.maximumDuration
             .plus(sessionPolicy.inactivityTimeout)
             .plus(reconciliationPolicy.overlap)
+            .plus(reconciliationPolicy.eventSettlementDelay)
 
     private sealed interface ReconciliationTarget {
         data object Inactive : ReconciliationTarget
