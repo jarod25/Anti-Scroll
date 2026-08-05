@@ -144,16 +144,15 @@ class SharedSessionReducer {
         )
     }
 
-    private fun startSession(
-        event: SharedSessionEvent.ApplicationForegrounded
-    ): SharedSessionState.Active = SharedSessionState.Active(
-        startedAt = event.observedAt,
-        startedAtElapsedRealtime = event.elapsedRealtime,
-        accumulatedForegroundDuration = Duration.ZERO,
-        foregroundApplication = event.packageName,
-        foregroundSinceElapsedRealtime = event.elapsedRealtime,
-        inactiveSinceElapsedRealtime = null,
-        lastObservedAt = event.observedAt,
-        lastObservedElapsedRealtime = event.elapsedRealtime
-    )
+    private fun startSession(event: SharedSessionEvent.ApplicationForegrounded): SharedSessionState.Active =
+        SharedSessionState.Active(
+            startedAt = event.observedAt,
+            startedAtElapsedRealtime = event.elapsedRealtime,
+            accumulatedForegroundDuration = Duration.ZERO,
+            foregroundApplication = event.packageName,
+            foregroundSinceElapsedRealtime = event.elapsedRealtime,
+            inactiveSinceElapsedRealtime = null,
+            lastObservedAt = event.observedAt,
+            lastObservedElapsedRealtime = event.elapsedRealtime
+        )
 }
