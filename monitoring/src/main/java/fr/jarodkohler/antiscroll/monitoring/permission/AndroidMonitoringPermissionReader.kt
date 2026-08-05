@@ -76,11 +76,9 @@ internal fun usageAccessStatusForMode(mode: Int): UsageAccessStatus = if (mode =
     UsageAccessStatus.MISSING
 }
 
-internal fun accessibilityMonitoringStatus(
-    isEnabled: Boolean,
-    isConnected: Boolean
-): AccessibilityMonitoringStatus = when {
-    !isEnabled -> AccessibilityMonitoringStatus.DISABLED
-    isConnected -> AccessibilityMonitoringStatus.ENABLED
-    else -> AccessibilityMonitoringStatus.DISCONNECTED
-}
+internal fun accessibilityMonitoringStatus(isEnabled: Boolean, isConnected: Boolean): AccessibilityMonitoringStatus =
+    when {
+        !isEnabled -> AccessibilityMonitoringStatus.DISABLED
+        isConnected -> AccessibilityMonitoringStatus.ENABLED
+        else -> AccessibilityMonitoringStatus.DISCONNECTED
+    }
