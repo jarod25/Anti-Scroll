@@ -87,9 +87,9 @@ internal class UsageStatsSharedSessionEventTracker {
 
         events.forEach { event ->
             val currentCluster = clusters.lastOrNull()
-            val previousEvent = currentCluster?.lastOrNull()
-            val belongsToCurrentCluster = previousEvent != null &&
-                Duration.between(previousEvent.occurredAt, event.occurredAt) <= settlementWindow
+            val firstEvent = currentCluster?.firstOrNull()
+            val belongsToCurrentCluster = firstEvent != null &&
+                Duration.between(firstEvent.occurredAt, event.occurredAt) <= settlementWindow
 
             if (belongsToCurrentCluster) {
                 currentCluster.add(event)
@@ -105,6 +105,14 @@ internal class UsageStatsSharedSessionEventTracker {
         val packageName = events.first().packageName
         val activities = activeActivities.getOrPut(packageName, ::mutableSetOf)
         val wasForeground = activities.isNotEmpty()
+        val containsResume = events.any { event ->
+            event.eventType == UsageStatsActivityEventType.RESUMED
+        }
+
+        if (!wasForeground && !containsResume) {
+            activeActivities.remove(packageName)
+            return null
+        }
 
         events.forEach { event ->
             processedEvents[event.key] = event.occurredAt
