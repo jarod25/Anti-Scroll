@@ -14,6 +14,7 @@ import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionState
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionTransition
 import fr.jarodkohler.antiscroll.engine.restriction.RestrictionEngine
 import fr.jarodkohler.antiscroll.engine.restriction.SessionLimitRule
+import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionDeadlinePlanner
 import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionReducer
 import java.time.Duration
 import java.time.Instant
@@ -67,12 +68,14 @@ class SharedSessionRuntimeTest {
     }
 
     @Test
-    fun observationProfileDoesNotStartRestrictionSession() = runTest {
+    fun observationProfileDoesNotStartRestrictionSessionOrDeadline() = runTest {
         val eventSource = FakeSharedSessionEventSource()
+        val deadlineScheduler = FakeDeadlineScheduler()
         val runtime = runtime(
             profileSource = FakeRestrictionProfileSource(observationProfile),
             eventSource = eventSource,
-            clock = FakeRuntimeClock(origin, Duration.ZERO)
+            clock = FakeRuntimeClock(origin, Duration.ZERO),
+            deadlineScheduler = deadlineScheduler
         )
 
         runtime.start()
@@ -83,16 +86,19 @@ class SharedSessionRuntimeTest {
         assertSame(SharedSessionState.Inactive, runtime.snapshots.value.state)
         assertNull(runtime.snapshots.value.lastTransition)
         assertNull(runtime.snapshots.value.lastDecision)
+        assertTrue(deadlineScheduler.requests.isEmpty())
     }
 
     @Test
-    fun activeProfileStartsSessionAndEvaluatesAllowance() = runTest {
+    fun activeProfileStartsSessionEvaluatesAllowanceAndSchedulesDeadline() = runTest {
         val profileSource = FakeRestrictionProfileSource(observationProfile)
         val eventSource = FakeSharedSessionEventSource()
+        val deadlineScheduler = FakeDeadlineScheduler()
         val runtime = runtime(
             profileSource = profileSource,
             eventSource = eventSource,
-            clock = FakeRuntimeClock(origin, Duration.ZERO)
+            clock = FakeRuntimeClock(origin, Duration.ZERO),
+            deadlineScheduler = deadlineScheduler
         )
 
         runtime.start()
@@ -108,6 +114,65 @@ class SharedSessionRuntimeTest {
         assertEquals(tikTok, state.foregroundApplication)
         assertEquals(SharedSessionTransition.Started(tikTok), snapshot.lastTransition)
         assertTrue(snapshot.lastDecision is RestrictionDecision.Allowed)
+        assertEquals(Duration.ofMinutes(10), deadlineScheduler.requests.single().delayDuration)
+    }
+
+    @Test
+    fun deadlineBlocksAtExactLimitWithoutAnotherPlatformEvent() = runTest {
+        val eventSource = FakeSharedSessionEventSource()
+        val deadlineScheduler = FakeDeadlineScheduler()
+        val clock = FakeRuntimeClock(origin, Duration.ZERO)
+        val runtime = runtime(
+            profileSource = FakeRestrictionProfileSource(normalProfile),
+            eventSource = eventSource,
+            clock = clock,
+            deadlineScheduler = deadlineScheduler
+        )
+
+        runtime.start()
+        runCurrent()
+        eventSource.emit(foreground(tikTok, minute = 0))
+        runCurrent()
+        clock.currentInstant = origin.plusSeconds(600)
+        clock.currentElapsedRealtime = Duration.ofMinutes(10)
+        deadlineScheduler.triggerLatest()
+        runCurrent()
+
+        val snapshot = runtime.snapshots.value
+        val decision = snapshot.lastDecision as RestrictionDecision.Blocked
+        assertTrue(snapshot.state is SharedSessionState.Active)
+        assertEquals(SharedSessionTransition.Started(tikTok), snapshot.lastTransition)
+        assertEquals(
+            RestrictionReasonCode.SESSION_LIMIT_REACHED,
+            decision.primaryResult.reasonCode
+        )
+        assertEquals(1, deadlineScheduler.requests.size)
+    }
+
+    @Test
+    fun earlyDeadlineRearmsOnlyTheRemainingDuration() = runTest {
+        val eventSource = FakeSharedSessionEventSource()
+        val deadlineScheduler = FakeDeadlineScheduler()
+        val clock = FakeRuntimeClock(origin, Duration.ZERO)
+        val runtime = runtime(
+            profileSource = FakeRestrictionProfileSource(normalProfile),
+            eventSource = eventSource,
+            clock = clock,
+            deadlineScheduler = deadlineScheduler
+        )
+
+        runtime.start()
+        runCurrent()
+        eventSource.emit(foreground(tikTok, minute = 0))
+        runCurrent()
+        clock.currentInstant = origin.plusSeconds(540)
+        clock.currentElapsedRealtime = Duration.ofMinutes(9)
+        deadlineScheduler.triggerLatest()
+        runCurrent()
+
+        assertTrue(runtime.snapshots.value.lastDecision is RestrictionDecision.Allowed)
+        assertEquals(2, deadlineScheduler.requests.size)
+        assertEquals(Duration.ofMinutes(1), deadlineScheduler.requests.last().delayDuration)
     }
 
     @Test
@@ -142,6 +207,29 @@ class SharedSessionRuntimeTest {
     }
 
     @Test
+    fun monitoredApplicationSwitchReschedulesOnlyRemainingDuration() = runTest {
+        val eventSource = FakeSharedSessionEventSource()
+        val deadlineScheduler = FakeDeadlineScheduler()
+        val runtime = runtime(
+            profileSource = FakeRestrictionProfileSource(normalProfile),
+            eventSource = eventSource,
+            clock = FakeRuntimeClock(origin, Duration.ZERO),
+            deadlineScheduler = deadlineScheduler
+        )
+
+        runtime.start()
+        runCurrent()
+        eventSource.emit(foreground(tikTok, minute = 0))
+        runCurrent()
+        eventSource.emit(foreground(instagram, minute = 4))
+        runCurrent()
+
+        assertEquals(2, deadlineScheduler.requests.size)
+        assertTrue(deadlineScheduler.requests.first().cancelled)
+        assertEquals(Duration.ofMinutes(6), deadlineScheduler.requests.last().delayDuration)
+    }
+
+    @Test
     fun explicitBackgroundTransitionExcludesPausedTime() = runTest {
         val eventSource = FakeSharedSessionEventSource()
         val runtime = runtime(
@@ -166,11 +254,48 @@ class SharedSessionRuntimeTest {
     }
 
     @Test
-    fun profileChangeEndsActiveSessionAndClearsDecision() = runTest {
+    fun backgroundCancelsDeadlineAndStaleCallbackCannotChangeSnapshot() = runTest {
+        val eventSource = FakeSharedSessionEventSource()
+        val deadlineScheduler = FakeDeadlineScheduler()
+        val clock = FakeRuntimeClock(origin, Duration.ZERO)
+        val runtime = runtime(
+            profileSource = FakeRestrictionProfileSource(normalProfile),
+            eventSource = eventSource,
+            clock = clock,
+            deadlineScheduler = deadlineScheduler
+        )
+
+        runtime.start()
+        runCurrent()
+        eventSource.emit(foreground(tikTok, minute = 0))
+        runCurrent()
+        eventSource.emit(background(tikTok, minute = 4))
+        runCurrent()
+        clock.currentInstant = origin.plusSeconds(600)
+        clock.currentElapsedRealtime = Duration.ofMinutes(10)
+        deadlineScheduler.trigger(index = 0, ignoreCancellation = true)
+        runCurrent()
+
+        val snapshot = runtime.snapshots.value
+        val state = snapshot.state as SharedSessionState.Active
+        assertTrue(deadlineScheduler.requests.single().cancelled)
+        assertNull(state.foregroundApplication)
+        assertNull(snapshot.lastDecision)
+        assertEquals(SharedSessionTransition.Paused(tikTok), snapshot.lastTransition)
+    }
+
+    @Test
+    fun profileChangeEndsActiveSessionClearsDecisionAndCancelsDeadline() = runTest {
         val profileSource = FakeRestrictionProfileSource(normalProfile)
         val eventSource = FakeSharedSessionEventSource()
+        val deadlineScheduler = FakeDeadlineScheduler()
         val clock = FakeRuntimeClock(origin.plusSeconds(60), Duration.ofMinutes(1))
-        val runtime = runtime(profileSource, eventSource, clock)
+        val runtime = runtime(
+            profileSource = profileSource,
+            eventSource = eventSource,
+            clock = clock,
+            deadlineScheduler = deadlineScheduler
+        )
         val updatedProfile = normalProfile.copy(version = 2)
 
         runtime.start()
@@ -188,17 +313,21 @@ class SharedSessionRuntimeTest {
             snapshot.lastTransition
         )
         assertNull(snapshot.lastDecision)
+        assertTrue(deadlineScheduler.requests.single().cancelled)
     }
 
     private fun TestScope.runtime(
         profileSource: RestrictionProfileSource,
         eventSource: SharedSessionEventSource,
-        clock: SharedSessionRuntimeClock
+        clock: SharedSessionRuntimeClock,
+        deadlineScheduler: SharedSessionDeadlineScheduler = FakeDeadlineScheduler()
     ): SharedSessionRuntime = SharedSessionRuntime(
         eventSources = setOf(eventSource),
         profileSource = profileSource,
         reducer = SharedSessionReducer(),
         restrictionEngine = RestrictionEngine(listOf(SessionLimitRule())),
+        deadlinePlanner = SharedSessionDeadlinePlanner(),
+        deadlineScheduler = deadlineScheduler,
         clock = clock,
         applicationScope = backgroundScope
     )
@@ -239,6 +368,41 @@ class SharedSessionRuntimeTest {
         fun emit(event: SharedSessionEvent) {
             check(mutableEvents.tryEmit(event)) { "Test event buffer is full" }
         }
+    }
+
+    private class FakeDeadlineScheduler : SharedSessionDeadlineScheduler {
+        val requests = mutableListOf<Request>()
+
+        override fun schedule(
+            delayDuration: Duration,
+            action: suspend () -> Unit
+        ): SharedSessionDeadlineHandle {
+            val request = Request(delayDuration = delayDuration, action = action)
+            requests += request
+            return SharedSessionDeadlineHandle {
+                request.cancelled = true
+            }
+        }
+
+        suspend fun triggerLatest() {
+            trigger(requests.lastIndex)
+        }
+
+        suspend fun trigger(
+            index: Int,
+            ignoreCancellation: Boolean = false
+        ) {
+            val request = requests[index]
+            if (!request.cancelled || ignoreCancellation) {
+                request.action()
+            }
+        }
+
+        data class Request(
+            val delayDuration: Duration,
+            val action: suspend () -> Unit,
+            var cancelled: Boolean = false
+        )
     }
 
     private data class FakeRuntimeClock(var currentInstant: Instant, var currentElapsedRealtime: Duration) :
