@@ -166,14 +166,11 @@ class UsageStatsSharedSessionEventTrackerTest {
         settlementWindow = Duration.ofSeconds(1)
     )
 
-    private fun record(
-        type: UsageStatsActivityEventType,
-        second: Long,
-        activity: String
-    ): UsageStatsEventRecord = UsageStatsEventRecord(
-        packageName = tikTok.value,
-        activityClassName = activity,
-        eventType = type,
-        occurredAtEpochMillis = origin.plusSeconds(second).toEpochMilli()
-    )
+    private fun record(type: UsageStatsActivityEventType, second: Long, activity: String): UsageStatsEventRecord =
+        UsageStatsEventRecord(
+            packageName = tikTok.value,
+            activityClassName = activity,
+            eventType = type,
+            occurredAtEpochMillis = origin.plusSeconds(second).toEpochMilli()
+        )
 }
