@@ -22,46 +22,57 @@ The application must:
 
 Opening the usage-access settings screen is not proof that access was granted. The application reads the actual app-op state and handles a missing settings activity without crashing.
 
-`UsageStatsManager.queryEvents` is the historical and recovery source for increment 1. Android retains event history for only a limited period, and Android 11 or later may return no data while the user is locked. Collection therefore persists normalized observations regularly and classifies locked or unavailable periods explicitly.
+`UsageStatsManager.queryEvents` is the historical and recovery source. Android retains event history for only a limited period, and Android 11 or later may return no data while the user is locked. Collection therefore persists normalized observations regularly and classifies locked or unavailable periods explicitly.
 
-On API 35 and later, `UsageEventsQuery` should restrict queries to relevant package names and event types. API 29 to 34 uses the timestamp-range query and filters the returned events locally.
+On API 35 and later, `UsageEventsQuery` restricts queries to relevant package names and event types. API 29 to 34 uses the timestamp-range query and filters the returned events locally.
 
 UsageStats data may be delayed, incomplete or ordered differently depending on Android version and device behavior. It is not treated as a perfect real-time event stream or presented as exact to the second.
 
 ## Accessibility service
 
-An accessibility service may be used to detect foreground application changes quickly and later trigger the block experience when a restricted application is opened.
+The accessibility service provides a low-latency package-level signal when a selected scrolling application reports a window-state transition. It does not replace UsageStats and does not own durable observation history.
 
-During increment 1 it remains an optional experiment behind a domain-facing monitoring contract. UsageStats collection and daily reconstruction must continue to work when the service is disabled or disconnected.
+Its scope is deliberately narrow:
 
-Its scope must remain minimal:
+- receive only `TYPE_WINDOW_STATE_CHANGED` events;
+- dynamically restrict Android package filtering to applications enabled in the monitored-application repository;
+- use Anti-Scroll's own package as a safe empty filter when no scrolling application is enabled;
+- set `canRetrieveWindowContent` to `false`;
+- never inspect accessibility nodes, visible text, messages or typed content;
+- never perform gestures or automate another application;
+- emit transient `ForegroundApplicationSignal` values through a domain contract;
+- attach both a wall-clock instant and Android elapsed realtime to each signal;
+- persist no accessibility event journal;
+- perform no remote transmission.
 
-- observe only the event types required for application identification;
-- restrict package filtering when the platform configuration permits it;
-- set `canRetrieveWindowContent` to `false` for the observation experiment;
-- avoid reading accessibility nodes, visible text or user content;
-- perform no remote transmission;
-- document the purpose clearly in the service description and onboarding;
-- remain removable from the domain through an interface;
-- report enabled, connected and disconnected states separately.
+Package-level window-state events can repeat for internal Activity transitions. The source therefore reports signals rather than claiming that every event is a unique application opening. Future restriction evaluation must remain idempotent and derive session behavior from its own state.
 
-Store-distribution requirements must be reviewed again before release. Eligibility must not be assumed from current development behavior.
+The application reports accessibility state separately from Usage Access:
+
+- disabled when Android has not enabled the service;
+- connected when Android has enabled and bound the service;
+- disconnected when Android reports it enabled but the current process has no active service connection;
+- unavailable or error when the platform state cannot be read reliably.
+
+UsageStats collection and daily reconstruction continue to work when the service is disabled or disconnected. Store-distribution requirements must be reviewed again before release; eligibility must not be assumed from development-device behavior.
+
+The detailed decision is recorded in ADR-008.
 
 ## Monitoring composition
 
 The monitoring implementation combines sources with distinct roles:
 
 ```text
-UsageStats history ──────┐
-Accessibility events ────┼─> observation normalizer -> normalized domain events
-System signals ──────────┘
+UsageStats history ──────> normalized durable observations -> Room journal
+Accessibility signals ───> transient foreground signals ───> future restriction evaluation
+System signals ──────────> recovery and interpretation triggers
 ```
 
-UsageStats owns historical reconstruction and comparison with Android system data. Accessibility provides optional low-latency signals for evaluation. System signals report boot, user unlock, time, time-zone and package changes that affect recovery or interpretation.
+UsageStats owns historical reconstruction and comparison with Android system data. Accessibility provides low-latency signals only. System signals report boot, user unlock, time, time-zone and package changes that affect recovery or interpretation.
 
-Source implementations do not write directly to Room. They emit source observations that are normalized through `domain` contracts. The `app` module composes monitoring and persistence implementations while `monitoring` and `data` remain independent sibling modules.
+UsageStats source implementations do not write directly to Room. They emit source observations that are normalized through domain contracts. The app module composes monitoring and persistence implementations while monitoring and data remain independent sibling modules.
 
-Events must be ordered, deduplicated and normalized before they affect durable projections. Android does not provide one universal event identifier, so deduplication is deterministic but must not be described as infallible.
+Historical events must be ordered, deduplicated and normalized before they affect durable projections. Android does not provide one universal event identifier, so deduplication is deterministic but must not be described as infallible.
 
 ## Collection reconciliation
 
@@ -79,9 +90,9 @@ WorkManager persists and reschedules required work across process and device res
 
 ## Package visibility
 
-Android 11 and later filter package information returned to applications. The initial monitored-application picker uses a versioned catalog of supported package names and targeted `<queries>` entries when labels, icons or installation state must be resolved.
+Android 11 and later filter package information returned to applications. The monitored-application picker uses a versioned catalog of supported package names and targeted `<queries>` entries when labels, icons or installation state must be resolved.
 
-Increment 1 does not request `QUERY_ALL_PACKAGES`.
+Anti-Scroll does not request `QUERY_ALL_PACKAGES`.
 
 Package names remain the persisted identity. Labels and icons are presentation metadata resolved from Android when visible and available. A failure to resolve them must not alter previously stored usage identity.
 
@@ -99,11 +110,11 @@ The block UI must show:
 
 The exact enforcement mechanism requires real-device validation across supported Android versions.
 
-Blocking is not implemented during increment 1.
+The accessibility foreground-signal increment does not implement blocking, session limits or cooldowns.
 
 ## Foreground execution
 
-Increment 1 does not introduce a permanent foreground service or aggressive polling loop.
+The observation foundation and accessibility foreground-signal service do not introduce a permanent foreground service or aggressive polling loop.
 
 A foreground service is used only when continuous execution is necessary for a concrete user-visible feature and compliant with the targeted Android version.
 
@@ -130,6 +141,8 @@ During observation, durable recovery reconstructs:
 - permission and monitoring health;
 - persistent reconciliation work.
 
+Accessibility signals are intentionally transient. After a process or service interruption, UsageStats reconstructs durable history while the restriction engine must restore its own persisted session and cooldown state in later increments.
+
 Later increments also reconstruct:
 
 - active profile;
@@ -137,15 +150,17 @@ Later increments also reconstruct:
 - quota consumption;
 - latest session state.
 
-WorkManager is the default owner of persistent deferrable reconciliation. A boot receiver may be added only if real-device validation demonstrates a concrete missing trigger. A receiver performs no heavy work and only enqueues or refreshes durable work within Android background-execution limits.
+WorkManager is the default owner of persistent deferrable reconciliation. A boot receiver performs no heavy work and only enqueues or refreshes durable work within Android background-execution limits.
 
 ## Time and time-zone changes
 
 The integration layer forwards wall-clock and time-zone changes to the domain. Elapsed durations use monotonic time while the process is alive. Persisted expiry data must include enough information to avoid shortening restrictions through simple clock changes.
 
+Accessibility foreground signals contain both the current wall-clock instant and Android elapsed realtime. The monotonic value is transient and resets on reboot; it must not be treated as a durable timestamp.
+
 Observation events preserve source wall-clock timestamps. Daily projections use an explicit local-day interpretation so time-zone changes can be handled deterministically and raw observations can be replayed if aggregation rules change.
 
-The final restriction-time strategy will be specified and tested before cooldown implementation because Android monotonic clocks reset on reboot.
+The final restriction-time strategy will be specified and tested before cooldown persistence because Android monotonic clocks reset on reboot.
 
 ## Manufacturer restrictions
 
@@ -167,6 +182,7 @@ Before the first useful release, testing must include:
 - device restart and user unlock;
 - permission revocation and restoration;
 - accessibility enable, disable and disconnect behavior;
+- proof that window content and accessibility nodes are not requested;
 - repeated overlapping reconciliation;
 - rapid switching between monitored applications;
 - screen lock and unlock;
@@ -175,4 +191,4 @@ Before the first useful release, testing must include:
 - battery-optimization behavior;
 - supported Android-version boundaries.
 
-The observation architecture and its trade-offs are recorded in ADR-007.
+The observation architecture and its trade-offs are recorded in ADR-007. Accessibility foreground monitoring is recorded in ADR-008.
