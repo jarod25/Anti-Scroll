@@ -63,25 +63,33 @@ The detailed decision is recorded in ADR-008.
 The monitoring implementation combines sources with distinct roles:
 
 ```text
-UsageStats history ──────> normalized durable observations -> Room journal
-Accessibility signals ───> explicit foreground events ─────> shared-session runtime
-Additional event sources ─> explicit background/recovery ──> shared-session runtime
-System signals ──────────> recovery and interpretation triggers
+UsageStats history ─────────────> normalized durable observations -> Room journal
+Accessibility foreground ───────> explicit foreground events ─────> shared-session runtime
+Bounded UsageStats correction ──> explicit foreground/background ─> shared-session runtime
+System signals ─────────────────> recovery and interpretation triggers
 ```
 
-UsageStats owns historical reconstruction and comparison with Android system data. Accessibility provides low-latency foreground signals only. System signals report boot, user unlock, time, time-zone and package changes that affect recovery or interpretation.
+UsageStats owns historical reconstruction and comparison with Android system data. Accessibility provides low-latency foreground signals only. A bounded UsageStats correction source provides explicit monitored-package transitions when filtered accessibility cannot observe the destination package. System signals report boot, user unlock, time, time-zone and package changes that affect recovery or interpretation.
 
 `ForegroundSignalSharedSessionEventSource` preserves the accessibility signal's package, wall-clock instant and elapsed realtime while adapting it to `ApplicationForegrounded`. It does not infer a matching background transition.
 
+`UsageStatsSharedSessionEventSource` is dormant while the active profile has no shared-session policy. When a policy is active, it queries only enabled monitored packages using overlapping windows, deduplicates repeated history and aggregates activity-level events before emitting package-level session corrections.
+
+The first UsageStats correction window is derived from the configured maximum session duration, inactivity timeout and technical overlap. Later successful windows advance a process-local cursor while retaining overlap for delayed publication. Missing Usage Access, locked-user state and source unavailability do not fabricate transitions and do not advance that successful cursor.
+
+Activity aggregation prevents a single paused Activity from backgrounding a package that still has another resumed Activity. Accessibility foreground hints allow a later UsageStats pause to correct the runtime when the matching resume predates the current correction window.
+
+UsageStats timestamps are wall-clock values. The correction source maps them to elapsed realtime from a same-query clock snapshot. Future records and records that would map before the current boot are ignored rather than assigned invented monotonic values.
+
 `SharedSessionRuntime` starts with the application process, serializes profile and event inputs, applies the pure reducer and evaluates the restriction engine after accepted foreground events. Its state and latest decision are exposed through a read-only `StateFlow`.
 
-The production runtime begins with the versioned observation profile, which has no shared-session policy. This wires monitoring without activating arbitrary example durations. A later durable profile source must activate configured restrictions explicitly.
+The production runtime begins with the versioned observation profile, which has no shared-session policy. This wires monitoring without activating arbitrary example durations or starting low-latency UsageStats reconciliation. A later durable profile source must activate configured restrictions explicitly.
 
-UsageStats source implementations do not write directly to Room. They emit source observations that are normalized through domain contracts. The app module composes monitoring and persistence implementations while monitoring and data remain independent sibling modules.
+UsageStats source implementations do not write directly to Room. They emit source observations or transient session corrections through explicit contracts. The app module composes monitoring and persistence implementations while monitoring and data remain independent sibling modules.
 
 Historical events must be ordered, deduplicated and normalized before they affect durable projections. Android does not provide one universal event identifier, so deduplication is deterministic but must not be described as infallible.
 
-The runtime composition and its limitations are recorded in ADR-010.
+The runtime composition and its limitations are recorded in ADR-010. Bounded session correction is recorded in ADR-011.
 
 ## Collection reconciliation
 
@@ -96,6 +104,8 @@ Observation collection is incremental and idempotent.
 - Unknown periods remain unknown; the application never fills them with estimated usage unless a future documented feature explicitly introduces an estimate.
 
 WorkManager persists and reschedules required work across process and device restarts, but Android controls the exact execution time. It is not used as a real-time foreground-application detector.
+
+The transient shared-session reconciliation loop is separate from durable observation work. It runs only while a shared-session policy is active, uses a technical two-second polling interval with five-second overlap and stops automatically when the profile or monitored package set no longer requires it. These values are integration parameters subject to physical-device latency and battery validation; they are not restriction limits.
 
 ## Package visibility
 
@@ -123,7 +133,9 @@ The shared-session runtime currently observes decisions only. It does not start 
 
 ## Foreground execution
 
-The observation foundation, accessibility foreground-signal service and process runtime do not introduce a permanent foreground service or aggressive polling loop.
+The observation foundation, accessibility foreground-signal service and process runtime do not introduce a permanent foreground service or an unconditional polling loop.
+
+Bounded UsageStats session reconciliation is collected only while the process is alive and an active profile contains a shared-session policy. It must be measured on the reference device before activation in a daily-use profile. It is not presented as a guarantee that the process will remain alive in the background.
 
 A foreground service is used only when continuous execution is necessary for a concrete user-visible feature and compliant with the targeted Android version.
 
@@ -150,7 +162,7 @@ During observation, durable recovery reconstructs:
 - permission and monitoring health;
 - persistent reconciliation work.
 
-Accessibility signals and the current shared-session runtime snapshot are intentionally process-local. After a process or service interruption, UsageStats reconstructs durable observation history while later increments must restore persisted restriction session and cooldown state.
+Accessibility signals, the UsageStats session-correction tracker and the current shared-session runtime snapshot are intentionally process-local. After a process or service interruption, durable UsageStats observation history remains available while an active correction source can reconstruct recent monitored transitions from a policy-derived window. Later increments must still restore persisted restriction session and cooldown state.
 
 Later increments also reconstruct:
 
@@ -167,7 +179,9 @@ The integration layer forwards wall-clock and time-zone changes to the domain. E
 
 Accessibility foreground signals contain both the current wall-clock instant and Android elapsed realtime. The monotonic value is transient and resets on reboot; it must not be treated as a durable timestamp.
 
-The runtime uses Android elapsed realtime only for runtime-owned transitions such as ending an active session after a profile change. Foreground monitoring events retain their source timestamps unchanged.
+UsageStats session corrections obtain wall-clock event timestamps from Android and derive transient elapsed realtime from a same-query clock snapshot. A record outside the current monotonic range is ignored. This mapping is appropriate only for short process-local correction windows and is not a durable reboot strategy.
+
+The runtime uses Android elapsed realtime only for runtime-owned transitions and process-local duration arithmetic. Foreground monitoring events retain their source wall-clock timestamps.
 
 Observation events preserve source wall-clock timestamps. Daily projections use an explicit local-day interpretation so time-zone changes can be handled deterministically and raw observations can be replayed if aggregation rules change.
 
@@ -197,10 +211,12 @@ Before the first useful release, testing must include:
 - repeated overlapping reconciliation;
 - rapid switching between monitored applications;
 - explicit background and recovery event correction;
+- UsageStats correction latency under an active test profile;
+- battery impact of active correction polling;
 - screen lock and unlock;
 - time and time-zone changes;
 - package visibility behavior;
 - battery-optimization behavior;
 - supported Android-version boundaries.
 
-The observation architecture and its trade-offs are recorded in ADR-007. Accessibility foreground monitoring is recorded in ADR-008. Shared-session runtime composition is recorded in ADR-010.
+The observation architecture and its trade-offs are recorded in ADR-007. Accessibility foreground monitoring is recorded in ADR-008. Shared-session runtime composition is recorded in ADR-010. UsageStats session reconciliation is recorded in ADR-011.
