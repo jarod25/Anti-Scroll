@@ -20,6 +20,8 @@ The context should contain only the information required for a deterministic dec
 - monitoring and permission health;
 - relevant persisted transitions.
 
+The first implemented context contains the target package, wall-clock evaluation instant, elapsed realtime, active versioned profile and shared-session state. Later increments extend it only when another rule requires additional immutable data.
+
 ## Rule result
 
 Each rule returns an explicit result containing at least:
@@ -32,6 +34,8 @@ Each rule returns an explicit result containing at least:
 
 Human-readable strings do not belong in the rule result. The UI maps stable reason codes to localized messages.
 
+A blocking rule must provide a stable reason code. The engine selects the highest-priority blocking result as the primary reason and retains other active blocking results as secondary diagnostics. Equal priorities preserve rule registration order.
+
 ## Initial rules
 
 - `PermissionHealthRule`
@@ -41,6 +45,10 @@ Human-readable strings do not belong in the rule result. The UI maps stable reas
 - `GlobalQuotaRule`
 - `AppQuotaRule`
 - `SessionLimitRule`
+
+`SessionLimitRule` is the first implemented rule. It is not applicable when the active profile has no shared-session policy or when no session is active. It allows usage below the configured maximum and blocks with `session_limit_reached` when foreground duration is greater than or equal to the maximum.
+
+The rule reports the measured session duration and configured limit as technical metadata. It does not mutate the session, start a cooldown, persist state or invoke Android behavior.
 
 ## Priority
 
@@ -54,13 +62,35 @@ Initial priority order:
 6. reached session limit;
 7. observation or normal allowance.
 
-A blocking result wins over an allowing result. The engine exposes the highest-priority reason and may retain secondary active reasons for diagnostics.
+A blocking result wins over an allowing result. The engine exposes the highest-priority reason and retains secondary active reasons for diagnostics.
+
+Priorities are represented explicitly rather than inferred from list position. Rule registration order is used only to break ties between results with the same priority.
 
 ## Determinism
 
 For the same context, profile and controlled clocks, evaluation must return the same result. Rules must not perform database access, Android API calls or hidden time reads during evaluation.
 
-Data required by rules is collected before engine invocation.
+Data required by rules is collected before engine invocation. Rule and profile collections are copied at construction boundaries so later external mutation cannot alter an existing evaluation unexpectedly.
+
+## Shared session state
+
+The shared session covers every monitored application. It is not an observation session per package and does not reset when the user switches between monitored applications.
+
+`SharedSessionReducer` consumes explicit events:
+
+- `ApplicationForegrounded` starts, resumes or switches the shared session;
+- `ApplicationBackgrounded` pauses foreground-duration accumulation;
+- `EndRequested` closes the session with an explicit stable reason.
+
+The reducer never infers inactivity from silence or missing accessibility events. Time spent outside monitored applications is excluded only after an explicit background transition.
+
+The active state stores accumulated monitored foreground duration and the current foreground segment. A direct switch from one monitored package to another closes the previous segment and continues the same session. A repeated signal for the same package is idempotent and does not restart the segment.
+
+When a session is paused, returning before the configured inactivity timeout resumes the same session without adding the gap. Returning at or after the timeout starts a new session. All thresholds are supplied by the active versioned profile; no duration is embedded in the reducer.
+
+Elapsed realtime is used for active duration arithmetic because it is monotonic during one device boot. Wall-clock instants remain attached for audit, history and future persistence. Reboot restoration requires a separate durable strategy because elapsed realtime resets on boot.
+
+The detailed decision is recorded in ADR-009.
 
 ## State transitions
 
@@ -74,6 +104,8 @@ Evaluation and state mutation are separate concerns:
 6. Notify Android integration and UI layers.
 
 This separation prevents a rule from silently changing state while being evaluated.
+
+The shared-session foundation currently provides the reducer and explicit end reasons for session limit, inactivity, priority restriction, day boundary and profile change. Persistence, cooldown creation and Android enforcement are intentionally deferred to later increments.
 
 ## Extensibility
 
@@ -93,6 +125,9 @@ Existing rules should not require modification.
 - all priority combinations;
 - multiple simultaneous blocking reasons;
 - expiry boundaries;
+- shared-session application switches;
+- duplicate, stale and irrelevant monitoring events;
+- inactivity timeout boundaries;
 - midnight and scheduled periods crossing days;
 - controlled time-zone changes;
 - profile transitions;
