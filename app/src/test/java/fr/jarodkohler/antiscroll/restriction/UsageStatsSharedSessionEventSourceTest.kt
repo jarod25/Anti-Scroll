@@ -155,10 +155,7 @@ class UsageStatsSharedSessionEventSourceTest {
         )
     )
 
-    private fun record(
-        type: UsageStatsActivityEventType,
-        second: Long
-    ): UsageStatsEventRecord = UsageStatsEventRecord(
+    private fun record(type: UsageStatsActivityEventType, second: Long): UsageStatsEventRecord = UsageStatsEventRecord(
         packageName = tikTok.value,
         activityClassName = "FeedActivity",
         eventType = type,
@@ -181,9 +178,8 @@ class UsageStatsSharedSessionEventSourceTest {
         override val activeProfile: StateFlow<RestrictionProfile> = mutableActiveProfile.asStateFlow()
     }
 
-    private class FakeMonitoredApplicationRepository(
-        applications: List<MonitoredApplication>
-    ) : MonitoredApplicationRepository {
+    private class FakeMonitoredApplicationRepository(applications: List<MonitoredApplication>) :
+        MonitoredApplicationRepository {
         private val mutableApplications = MutableStateFlow(applications)
 
         override fun observeAll(): Flow<List<MonitoredApplication>> = mutableApplications.asStateFlow()
@@ -194,8 +190,10 @@ class UsageStatsSharedSessionEventSourceTest {
             mutableApplications.value.filter(MonitoredApplication::isEnabled)
 
         override suspend fun save(application: MonitoredApplication) {
-            mutableApplications.value = mutableApplications.value
-                .filterNot { current -> current.packageName == application.packageName } + application
+            mutableApplications.value =
+                mutableApplications.value.filterNot { current ->
+                    current.packageName == application.packageName
+                } + application
         }
     }
 
