@@ -72,6 +72,7 @@ object RestrictionRuntimeProvisionModule {
     fun provideUsageStatsSessionReconciliationPolicy(): UsageStatsSessionReconciliationPolicy =
         UsageStatsSessionReconciliationPolicy(
             pollingInterval = Duration.ofSeconds(2),
-            overlap = Duration.ofSeconds(5)
+            overlap = Duration.ofSeconds(5),
+            eventSettlementDelay = Duration.ofSeconds(1)
         )
 }
