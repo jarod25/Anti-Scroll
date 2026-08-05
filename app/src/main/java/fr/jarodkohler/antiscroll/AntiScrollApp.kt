@@ -1,8 +1,8 @@
 package fr.jarodkohler.antiscroll
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,7 +40,7 @@ fun AntiScrollApp(
         var selectedTabIndex by rememberSaveable { mutableIntStateOf(MainTab.DASHBOARD.ordinal) }
 
         Column(modifier = modifier) {
-            TabRow(selectedTabIndex = selectedTabIndex) {
+            PrimaryTabRow(selectedTabIndex = selectedTabIndex) {
                 MainTab.entries.forEach { tab ->
                     Tab(
                         selected = selectedTabIndex == tab.ordinal,

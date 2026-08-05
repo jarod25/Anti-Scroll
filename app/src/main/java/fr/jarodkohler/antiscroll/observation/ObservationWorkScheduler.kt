@@ -23,7 +23,7 @@ interface ObservationWorkScheduler {
 class AndroidObservationWorkScheduler
 @Inject
 constructor(
-    @param:ApplicationContext context: Context,
+    @ApplicationContext context: Context,
     private val policy: ObservationSchedulingPolicy
 ) : ObservationWorkScheduler {
     private val workManager = WorkManager.getInstance(context)

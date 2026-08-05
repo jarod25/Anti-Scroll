@@ -5,8 +5,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 object DatabaseMigrations {
     val MIGRATION_1_2 = object : Migration(1, 2) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL(
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
                 """
                 CREATE TABLE IF NOT EXISTS `usage_events` (
                     `event_id` TEXT NOT NULL,
@@ -19,20 +19,20 @@ object DatabaseMigrations {
                 )
                 """.trimIndent()
             )
-            database.execSQL(
+            db.execSQL(
                 "CREATE INDEX IF NOT EXISTS `index_usage_events_occurred_at_epoch_millis` " +
                     "ON `usage_events` (`occurred_at_epoch_millis`)"
             )
-            database.execSQL(
+            db.execSQL(
                 "CREATE INDEX IF NOT EXISTS `index_usage_events_package_name_occurred_at_epoch_millis` " +
                     "ON `usage_events` (`package_name`, `occurred_at_epoch_millis`)"
             )
-            database.execSQL(
+            db.execSQL(
                 "CREATE INDEX IF NOT EXISTS `index_usage_events_source_occurred_at_epoch_millis` " +
                     "ON `usage_events` (`source`, `occurred_at_epoch_millis`)"
             )
 
-            database.execSQL(
+            db.execSQL(
                 """
                 CREATE TABLE IF NOT EXISTS `daily_application_usage` (
                     `date_epoch_day` INTEGER NOT NULL,
@@ -44,12 +44,12 @@ object DatabaseMigrations {
                 )
                 """.trimIndent()
             )
-            database.execSQL(
+            db.execSQL(
                 "CREATE INDEX IF NOT EXISTS `index_daily_application_usage_package_name_date_epoch_day` " +
                     "ON `daily_application_usage` (`package_name`, `date_epoch_day`)"
             )
 
-            database.execSQL(
+            db.execSQL(
                 """
                 CREATE TABLE IF NOT EXISTS `collection_checkpoints` (
                     `source` TEXT NOT NULL,
@@ -60,7 +60,7 @@ object DatabaseMigrations {
                 """.trimIndent()
             )
 
-            database.execSQL(
+            db.execSQL(
                 """
                 CREATE TABLE IF NOT EXISTS `collection_gaps` (
                     `gap_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -72,16 +72,16 @@ object DatabaseMigrations {
                 )
                 """.trimIndent()
             )
-            database.execSQL(
+            db.execSQL(
                 "CREATE INDEX IF NOT EXISTS `index_collection_gaps_start_inclusive_epoch_millis` " +
                     "ON `collection_gaps` (`start_inclusive_epoch_millis`)"
             )
-            database.execSQL(
+            db.execSQL(
                 "CREATE INDEX IF NOT EXISTS `index_collection_gaps_source_start_inclusive_epoch_millis` " +
                     "ON `collection_gaps` (`source`, `start_inclusive_epoch_millis`)"
             )
 
-            database.execSQL(
+            db.execSQL(
                 """
                 CREATE TABLE IF NOT EXISTS `monitoring_health` (
                     `singleton_id` INTEGER NOT NULL,
@@ -97,8 +97,8 @@ object DatabaseMigrations {
     }
 
     val MIGRATION_2_3 = object : Migration(2, 3) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL(
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
                 "ALTER TABLE `usage_events` ADD COLUMN `activity_class_name` TEXT"
             )
         }
