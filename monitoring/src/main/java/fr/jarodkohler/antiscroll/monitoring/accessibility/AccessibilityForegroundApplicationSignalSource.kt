@@ -9,8 +9,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 @Singleton
-class AccessibilityForegroundApplicationSignalSource @Inject constructor() :
-    ForegroundApplicationSignalSource {
+class AccessibilityForegroundApplicationSignalSource @Inject constructor() : ForegroundApplicationSignalSource {
     private val mutableSignals = MutableSharedFlow<ForegroundApplicationSignal>(
         extraBufferCapacity = SIGNAL_BUFFER_CAPACITY
     )
