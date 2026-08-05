@@ -143,18 +143,15 @@ constructor(
         return minOf(overlappingStart, safeRecentStart)
     }
 
-    private fun initialLookback(sessionPolicy: SharedSessionPolicy): Duration =
-        sessionPolicy.maximumDuration
-            .plus(sessionPolicy.inactivityTimeout)
-            .plus(reconciliationPolicy.overlap)
-            .plus(reconciliationPolicy.eventSettlementDelay)
+    private fun initialLookback(sessionPolicy: SharedSessionPolicy): Duration = sessionPolicy.maximumDuration
+        .plus(sessionPolicy.inactivityTimeout)
+        .plus(reconciliationPolicy.overlap)
+        .plus(reconciliationPolicy.eventSettlementDelay)
 
     private sealed interface ReconciliationTarget {
         data object Inactive : ReconciliationTarget
 
-        data class Active(
-            val packageNames: Set<ApplicationPackageName>,
-            val initialLookback: Duration
-        ) : ReconciliationTarget
+        data class Active(val packageNames: Set<ApplicationPackageName>, val initialLookback: Duration) :
+            ReconciliationTarget
     }
 }
