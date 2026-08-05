@@ -30,10 +30,11 @@ class PermissionOnboardingScreenTest {
                 PermissionOnboardingScreen(
                     permissionSnapshot = MonitoringPermissionSnapshot(
                         usageAccessStatus = UsageAccessStatus.MISSING,
-                        accessibilityStatus = AccessibilityMonitoringStatus.UNSUPPORTED
+                        accessibilityStatus = AccessibilityMonitoringStatus.DISABLED
                     ),
                     settingsLaunchFailed = false,
-                    onOpenUsageAccessSettings = { clicked = true }
+                    onOpenUsageAccessSettings = { clicked = true },
+                    onOpenAccessibilitySettings = {}
                 )
             }
         }
@@ -42,7 +43,7 @@ class PermissionOnboardingScreenTest {
         composeRule.onNodeWithTag(PermissionOnboardingTestTags.PRIVACY_SUMMARY_CARD)
             .assertIsDisplayed()
         composeRule.onNodeWithText(
-            "It cannot read messages, passwords, typed text, photos or screen contents."
+            "The accessibility service does not retrieve screen contents, visible text, messages, passwords, typed text, photos or accessibility nodes."
         ).assertIsDisplayed()
         composeRule.onNodeWithText("Continue to Android settings").assertIsDisplayed()
         composeRule.onNodeWithTag(PermissionOnboardingTestTags.USAGE_ACCESS_BUTTON)
@@ -56,23 +57,33 @@ class PermissionOnboardingScreenTest {
     }
 
     @Test
-    fun grantedUsageAccessAndOptionalAccessibilityAreShownSeparately() {
+    fun accessibilityStatusAndSettingsActionAreShownSeparately() {
+        var clicked = false
+
         composeRule.setContent {
             AntiScrollTheme {
                 PermissionOnboardingScreen(
                     permissionSnapshot = MonitoringPermissionSnapshot(
                         usageAccessStatus = UsageAccessStatus.GRANTED,
-                        accessibilityStatus = AccessibilityMonitoringStatus.UNSUPPORTED
+                        accessibilityStatus = AccessibilityMonitoringStatus.DISCONNECTED
                     ),
                     settingsLaunchFailed = true,
-                    onOpenUsageAccessSettings = {}
+                    onOpenUsageAccessSettings = {},
+                    onOpenAccessibilitySettings = { clicked = true }
                 )
             }
         }
 
         composeRule.onNodeWithText("Granted").assertIsDisplayed()
-        composeRule.onNodeWithText("Not available yet").assertIsDisplayed()
+        composeRule.onNodeWithText("Disconnected").assertIsDisplayed()
+        composeRule.onNodeWithTag(PermissionOnboardingTestTags.ACCESSIBILITY_BUTTON)
+            .assertIsDisplayed()
+            .performClick()
         composeRule.onNodeWithTag(PermissionOnboardingTestTags.SETTINGS_ERROR)
             .assertIsDisplayed()
+
+        composeRule.runOnIdle {
+            assertTrue(clicked)
+        }
     }
 }
