@@ -24,6 +24,7 @@ This directory contains the technical documentation used as the development refe
 - [`ADR-008`](adr/008-accessibility-foreground-monitoring.md): use accessibility only as a transient foreground signal.
 - [`ADR-009`](adr/009-explicit-shared-session-transitions.md): model shared sessions through explicit deterministic transitions.
 - [`ADR-010`](adr/010-shared-session-runtime-composition.md): compose the process runtime from explicit event and profile sources.
+- [`ADR-011`](adr/011-usage-stats-session-reconciliation.md): reconcile monitored package exits with bounded UsageStats queries.
 
 ## Documentation rules
 
