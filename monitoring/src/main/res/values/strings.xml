@@ -1,0 +1,4 @@
+<resources>
+    <string name="accessibility_service_label">Anti-Scroll monitoring</string>
+    <string name="accessibility_service_description">Detects when a selected scrolling application appears in the foreground. Anti-Scroll does not retrieve window content, visible text or accessibility nodes.</string>
+</resources>
