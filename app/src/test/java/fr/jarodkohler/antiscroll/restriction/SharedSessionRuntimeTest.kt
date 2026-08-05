@@ -17,6 +17,7 @@ import fr.jarodkohler.antiscroll.engine.restriction.SessionLimitRule
 import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionReducer
 import java.time.Duration
 import java.time.Instant
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +34,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SharedSessionRuntimeTest {
     private val tikTok = ApplicationPackageName("com.zhiliaoapp.musically")
     private val instagram = ApplicationPackageName("com.instagram.android")
