@@ -222,9 +222,9 @@ private fun PermissionCard(
 }
 
 private data class PermissionPresentation(
-    @StringRes val statusRes: Int,
-    @StringRes val descriptionRes: Int,
-    @StringRes val buttonRes: Int
+    @param:StringRes val statusRes: Int,
+    @param:StringRes val descriptionRes: Int,
+    @param:StringRes val buttonRes: Int
 )
 
 private fun usageAccessPresentation(status: UsageAccessStatus): PermissionPresentation = when (status) {
