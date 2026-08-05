@@ -4,7 +4,8 @@ import java.time.Duration
 
 data class UsageStatsSessionReconciliationPolicy(
     val pollingInterval: Duration,
-    val overlap: Duration
+    val overlap: Duration,
+    val eventSettlementDelay: Duration
 ) {
     init {
         require(!pollingInterval.isZero && !pollingInterval.isNegative) {
@@ -12,6 +13,9 @@ data class UsageStatsSessionReconciliationPolicy(
         }
         require(!overlap.isZero && !overlap.isNegative) {
             "UsageStats reconciliation overlap must be positive"
+        }
+        require(!eventSettlementDelay.isNegative) {
+            "UsageStats reconciliation settlement delay must not be negative"
         }
     }
 }
