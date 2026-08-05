@@ -16,11 +16,12 @@ class ObservationRuntimeConfigurationTest {
     }
 
     @Test
-    fun defaultSessionProfileMergesOnlyShortInternalTransitions() {
+    fun defaultSessionProfileSeparatesInternalTransitionsFromBriefInterruptions() {
         val policy = DefaultObservationProfile.sessionReconstructionPolicy
 
         assertEquals(UsageEventSource.USAGE_STATS, policy.source)
         assertEquals(Duration.ofSeconds(3), policy.internalTransitionGrace)
+        assertEquals(Duration.ofMinutes(2), policy.openingContinuationGrace)
         assertEquals(Duration.ofHours(6), policy.boundaryLookback)
     }
 

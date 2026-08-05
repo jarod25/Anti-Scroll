@@ -17,6 +17,7 @@ import fr.jarodkohler.antiscroll.engine.observation.ObservationBaselinePolicy
 import fr.jarodkohler.antiscroll.engine.observation.ObservationReconciliationCoordinator
 import fr.jarodkohler.antiscroll.engine.observation.ObservationReconciliationPolicy
 import fr.jarodkohler.antiscroll.engine.observation.TimeZoneProvider
+import fr.jarodkohler.antiscroll.engine.observation.UsageOpeningEstimator
 import fr.jarodkohler.antiscroll.engine.observation.UsageSessionReconstructionPolicy
 import fr.jarodkohler.antiscroll.engine.observation.UsageSessionReconstructor
 import java.time.Clock
@@ -68,6 +69,11 @@ object ObservationRuntimeProvisionModule {
 
     @Provides
     @Singleton
+    fun provideUsageOpeningEstimator(policy: UsageSessionReconstructionPolicy): UsageOpeningEstimator =
+        UsageOpeningEstimator(policy)
+
+    @Provides
+    @Singleton
     fun provideObservationReconciliationCoordinator(
         sources: Set<@JvmSuppressWildcards UsageObservationSource>,
         monitoredApplicationRepository: MonitoredApplicationRepository,
@@ -94,6 +100,7 @@ object ObservationRuntimeProvisionModule {
         observationStateRepository: ObservationStateRepository,
         dailyUsageRepository: DailyUsageRepository,
         sessionReconstructor: UsageSessionReconstructor,
+        openingEstimator: UsageOpeningEstimator,
         sessionPolicy: UsageSessionReconstructionPolicy,
         timeZoneProvider: TimeZoneProvider
     ): DailyUsageProjectionCoordinator = DailyUsageProjectionCoordinator(
@@ -102,6 +109,7 @@ object ObservationRuntimeProvisionModule {
         observationStateRepository = observationStateRepository,
         dailyUsageRepository = dailyUsageRepository,
         sessionReconstructor = sessionReconstructor,
+        openingEstimator = openingEstimator,
         sessionPolicy = sessionPolicy,
         timeZoneProvider = timeZoneProvider
     )

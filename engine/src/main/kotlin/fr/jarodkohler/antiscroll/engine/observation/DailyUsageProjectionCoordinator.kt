@@ -20,6 +20,7 @@ class DailyUsageProjectionCoordinator(
     private val observationStateRepository: ObservationStateRepository,
     private val dailyUsageRepository: DailyUsageRepository,
     private val sessionReconstructor: UsageSessionReconstructor,
+    private val openingEstimator: UsageOpeningEstimator,
     private val sessionPolicy: UsageSessionReconstructionPolicy,
     private val timeZoneProvider: TimeZoneProvider
 ) {
@@ -63,27 +64,33 @@ class DailyUsageProjectionCoordinator(
             .filter { event -> event.source == sessionPolicy.source }
             .groupBy { event -> event.packageName }
         val completeness = determineCompleteness(targetWindow)
+        val sessionsByPackage = linkedMapOf<ApplicationPackageName, List<ReconstructedUsageSession>>()
 
-        val dailyUsage = packageNames.sortedBy(ApplicationPackageName::value).map { packageName ->
+        packageNames.sortedBy(ApplicationPackageName::value).forEach { packageName ->
             val eventBeforeWindow = usageEventRepository.latestBefore(
                 packageName = packageName,
                 source = sessionPolicy.source,
                 beforeExclusive = contextWindow.startInclusive
             )
-            val sessions = sessionReconstructor.reconstruct(
+            sessionsByPackage[packageName] = sessionReconstructor.reconstruct(
                 packageName = packageName,
                 window = contextWindow,
                 events = sourceEvents[packageName].orEmpty(),
                 eventBeforeWindow = eventBeforeWindow
             )
+        }
 
+        val dailyUsage = packageNames.sortedBy(ApplicationPackageName::value).map { packageName ->
+            val sessions = sessionsByPackage[packageName].orEmpty()
             DailyApplicationUsage(
                 date = date,
                 packageName = packageName,
                 foregroundDuration = sessions.sumOverlap(targetWindow),
-                estimatedOpeningCount = sessions.count { session ->
-                    !session.startInferred && session.startInclusive in targetWindow
-                },
+                estimatedOpeningCount = openingEstimator.estimate(
+                    packageName = packageName,
+                    targetWindow = targetWindow,
+                    sessionsByPackage = sessionsByPackage
+                ),
                 completeness = completeness
             )
         }
