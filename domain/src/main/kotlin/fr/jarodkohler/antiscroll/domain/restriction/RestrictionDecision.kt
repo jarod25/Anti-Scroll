@@ -79,11 +79,10 @@ data class RestrictionRuleResult(
             metadata = metadata.toMap()
         )
 
-        fun notApplicable(priority: RestrictionPriority): RestrictionRuleResult =
-            RestrictionRuleResult(
-                outcome = RestrictionRuleOutcome.NOT_APPLICABLE,
-                priority = priority
-            )
+        fun notApplicable(priority: RestrictionPriority): RestrictionRuleResult = RestrictionRuleResult(
+            outcome = RestrictionRuleOutcome.NOT_APPLICABLE,
+            priority = priority
+        )
     }
 }
 
@@ -102,9 +101,7 @@ data class RestrictionEvaluationContext(
 sealed interface RestrictionDecision {
     val evaluatedResults: List<RestrictionRuleResult>
 
-    data class Allowed(
-        override val evaluatedResults: List<RestrictionRuleResult>
-    ) : RestrictionDecision
+    data class Allowed(override val evaluatedResults: List<RestrictionRuleResult>) : RestrictionDecision
 
     data class Blocked(
         val primaryResult: RestrictionRuleResult,
@@ -115,9 +112,11 @@ sealed interface RestrictionDecision {
             require(primaryResult.outcome == RestrictionRuleOutcome.BLOCK) {
                 "The primary restriction result must be blocking"
             }
-            require(secondaryResults.all { result ->
-                result.outcome == RestrictionRuleOutcome.BLOCK
-            }) {
+            require(
+                secondaryResults.all { result ->
+                    result.outcome == RestrictionRuleOutcome.BLOCK
+                }
+            ) {
                 "Secondary restriction results must be blocking"
             }
         }
