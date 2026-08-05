@@ -28,84 +28,128 @@ internal class UsageStatsSharedSessionEventTracker {
         records: Collection<UsageStatsEventRecord>,
         allowedPackages: Set<ApplicationPackageName>,
         clockSnapshot: ReconciliationClockSnapshot,
-        retainFrom: Instant
+        retainFrom: Instant,
+        processThrough: Instant,
+        settlementWindow: Duration
     ): List<SharedSessionEvent> {
+        require(processThrough <= clockSnapshot.observedAt) {
+            "UsageStats processing boundary must not follow the clock snapshot"
+        }
+        require(!settlementWindow.isNegative) {
+            "UsageStats settlement window must not be negative"
+        }
+
         processedEvents.entries.removeAll { (_, occurredAt) -> occurredAt < retainFrom }
         if (records.isEmpty() || allowedPackages.isEmpty()) return emptyList()
 
         val allowedByValue = allowedPackages.associateBy(ApplicationPackageName::value)
-        val freshRecords = records.mapNotNull { record ->
+        val freshRecords = records.withIndex().mapNotNull { indexedRecord ->
+            val record = indexedRecord.value
             val packageName = allowedByValue[record.packageName] ?: return@mapNotNull null
             val occurredAt = Instant.ofEpochMilli(record.occurredAtEpochMillis)
-            if (occurredAt < retainFrom || occurredAt > clockSnapshot.observedAt) {
-                return@mapNotNull null
-            }
+            if (occurredAt < retainFrom || occurredAt > processThrough) return@mapNotNull null
 
             val key = UsageStatsEventKey.from(record)
             if (processedEvents.containsKey(key)) return@mapNotNull null
+            val elapsedRealtime = elapsedRealtimeFor(
+                occurredAt = occurredAt,
+                clockSnapshot = clockSnapshot
+            ) ?: return@mapNotNull null
 
             TrackedUsageStatsEvent(
                 key = key,
                 packageName = packageName,
                 activityClassName = record.activityClassName?.takeIf(String::isNotBlank),
                 eventType = record.eventType,
-                occurredAt = occurredAt
+                occurredAt = occurredAt,
+                elapsedRealtime = elapsedRealtime,
+                sourceOrder = indexedRecord.index
             )
         }.sortedWith(
             compareBy<TrackedUsageStatsEvent>(TrackedUsageStatsEvent::occurredAt)
-                .thenBy { event -> event.packageName.value }
-                .thenBy { event -> event.eventType.ordinal }
-                .thenBy { event -> event.activityClassName.orEmpty() }
+                .thenBy { event -> event.sourceOrder }
         )
 
-        val emittedEvents = mutableListOf<SharedSessionEvent>()
-        freshRecords.groupBy { event -> event.occurredAt to event.packageName }
-            .toSortedMap(compareBy<Pair<Instant, ApplicationPackageName>>({ it.first }, { it.second.value }))
-            .forEach { (_, eventsAtInstant) ->
-                val firstEvent = eventsAtInstant.first()
-                val elapsedRealtime = elapsedRealtimeFor(
-                    occurredAt = firstEvent.occurredAt,
-                    clockSnapshot = clockSnapshot
-                ) ?: return@forEach
-                val activities = activeActivities.getOrPut(firstEvent.packageName, ::mutableSetOf)
-                val wasForeground = activities.isNotEmpty()
+        return freshRecords.groupBy(TrackedUsageStatsEvent::packageName)
+            .flatMap { (_, packageEvents) ->
+                cluster(packageEvents, settlementWindow).mapNotNull(::processCluster)
+            }.sortedWith(
+                compareBy<SharedSessionEvent>(SharedSessionEvent::observedAt)
+                    .thenBy(::eventOrder)
+            )
+    }
 
-                eventsAtInstant.forEach { event ->
-                    processedEvents[event.key] = event.occurredAt
-                    when (event.eventType) {
-                        UsageStatsActivityEventType.RESUMED -> {
-                            activities.remove(ACCESSIBILITY_HINT)
-                            activities.add(event.activityKey())
-                        }
+    private fun cluster(
+        events: List<TrackedUsageStatsEvent>,
+        settlementWindow: Duration
+    ): List<List<TrackedUsageStatsEvent>> {
+        val clusters = mutableListOf<MutableList<TrackedUsageStatsEvent>>()
 
-                        UsageStatsActivityEventType.PAUSED -> {
-                            val removed = activities.remove(event.activityKey())
-                            if (!removed) activities.remove(ACCESSIBILITY_HINT)
-                        }
-                    }
+        events.forEach { event ->
+            val currentCluster = clusters.lastOrNull()
+            val previousEvent = currentCluster?.lastOrNull()
+            val belongsToCurrentCluster = previousEvent != null &&
+                Duration.between(previousEvent.occurredAt, event.occurredAt) <= settlementWindow
+
+            if (belongsToCurrentCluster) {
+                currentCluster.add(event)
+            } else {
+                clusters += mutableListOf(event)
+            }
+        }
+
+        return clusters
+    }
+
+    private fun processCluster(events: List<TrackedUsageStatsEvent>): SharedSessionEvent? {
+        val packageName = events.first().packageName
+        val activities = activeActivities.getOrPut(packageName, ::mutableSetOf)
+        val wasForeground = activities.isNotEmpty()
+
+        events.forEach { event ->
+            processedEvents[event.key] = event.occurredAt
+            when (event.eventType) {
+                UsageStatsActivityEventType.RESUMED -> {
+                    activities.remove(ACCESSIBILITY_HINT)
+                    activities.add(event.activityKey())
                 }
 
-                val isForeground = activities.isNotEmpty()
-                when {
-                    !wasForeground && isForeground -> emittedEvents +=
-                        SharedSessionEvent.ApplicationForegrounded(
-                            packageName = firstEvent.packageName,
-                            observedAt = firstEvent.occurredAt,
-                            elapsedRealtime = elapsedRealtime
-                        )
-
-                    wasForeground && !isForeground -> emittedEvents +=
-                        SharedSessionEvent.ApplicationBackgrounded(
-                            packageName = firstEvent.packageName,
-                            observedAt = firstEvent.occurredAt,
-                            elapsedRealtime = elapsedRealtime
-                        )
+                UsageStatsActivityEventType.PAUSED -> {
+                    val removed = activities.remove(event.activityKey())
+                    if (!removed) activities.remove(ACCESSIBILITY_HINT)
                 }
+            }
+        }
 
-                if (!isForeground) activeActivities.remove(firstEvent.packageName)
+        val isForeground = activities.isNotEmpty()
+        val transitionEvent = when {
+            !wasForeground && isForeground -> {
+                val resumed = events.first { event ->
+                    event.eventType == UsageStatsActivityEventType.RESUMED
+                }
+                SharedSessionEvent.ApplicationForegrounded(
+                    packageName = packageName,
+                    observedAt = resumed.occurredAt,
+                    elapsedRealtime = resumed.elapsedRealtime
+                )
             }
 
-        return emittedEvents
+            wasForeground && !isForeground -> {
+                val paused = events.last { event ->
+                    event.eventType == UsageStatsActivityEventType.PAUSED
+                }
+                SharedSessionEvent.ApplicationBackgrounded(
+                    packageName = packageName,
+                    observedAt = paused.occurredAt,
+                    elapsedRealtime = paused.elapsedRealtime
+                )
+            }
+
+            else -> null
+        }
+
+        if (!isForeground) activeActivities.remove(packageName)
+        return transitionEvent
     }
 
     private fun elapsedRealtimeFor(
@@ -117,12 +161,20 @@ internal class UsageStatsSharedSessionEventTracker {
         return clockSnapshot.elapsedRealtime.minus(eventAge)
     }
 
+    private fun eventOrder(event: SharedSessionEvent): Int = when (event) {
+        is SharedSessionEvent.ApplicationBackgrounded -> 0
+        is SharedSessionEvent.ApplicationForegrounded -> 1
+        is SharedSessionEvent.EndRequested -> 2
+    }
+
     private data class TrackedUsageStatsEvent(
         val key: UsageStatsEventKey,
         val packageName: ApplicationPackageName,
         val activityClassName: String?,
         val eventType: UsageStatsActivityEventType,
-        val occurredAt: Instant
+        val occurredAt: Instant,
+        val elapsedRealtime: Duration,
+        val sourceOrder: Int
     ) {
         fun activityKey(): String = activityClassName ?: UNKNOWN_ACTIVITY
     }
