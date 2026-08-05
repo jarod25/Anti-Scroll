@@ -25,11 +25,11 @@
     <string name="accessibility_disconnected">Disconnected</string>
     <string name="accessibility_unsupported">Unavailable</string>
     <string name="accessibility_error">Status error</string>
-    <string name="accessibility_disabled_description">Enable Anti-Scroll monitoring in Android accessibility settings to detect selected scrolling applications quickly. Usage history continues to work without it.</string>
+    <string name="accessibility_disabled_description">Android opens the main Accessibility screen. Open Downloaded apps (or Installed services), select Anti-Scroll monitoring, then enable the service. Usage history continues to work without it.</string>
     <string name="accessibility_enabled_description">Android reports the service enabled and connected. It emits transient package-level foreground signals without reading window contents.</string>
-    <string name="accessibility_disconnected_description">Android reports the service enabled, but Anti-Scroll is not currently connected to it. Review the setting and return to refresh the status.</string>
+    <string name="accessibility_disconnected_description">Android reports the service enabled but not connected. Open Downloaded apps (or Installed services), select Anti-Scroll monitoring, disable and enable it again, then return to Anti-Scroll.</string>
     <string name="accessibility_unsupported_description">This device does not expose the expected accessibility service manager. Real-time foreground detection is unavailable.</string>
-    <string name="accessibility_error_description">Anti-Scroll could not read the accessibility-service state. Review the setting and return to try again.</string>
+    <string name="accessibility_error_description">Anti-Scroll could not read the accessibility-service state. Open Downloaded apps (or Installed services), select Anti-Scroll monitoring, then return to try again.</string>
     <string name="open_accessibility_settings">Open accessibility settings</string>
     <string name="review_accessibility_settings">Review accessibility settings</string>
     <string name="main_tab_dashboard">Today</string>
