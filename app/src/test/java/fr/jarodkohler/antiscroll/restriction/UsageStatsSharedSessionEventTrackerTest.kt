@@ -23,11 +23,8 @@ class UsageStatsSharedSessionEventTrackerTest {
         val tracker = UsageStatsSharedSessionEventTracker()
         tracker.markForeground(tikTok)
 
-        val events = tracker.accept(
-            records = listOf(record(UsageStatsActivityEventType.PAUSED, second = 10, activity = "FeedActivity")),
-            allowedPackages = setOf(tikTok),
-            clockSnapshot = snapshot,
-            retainFrom = origin
+        val events = tracker.acceptSettled(
+            records = listOf(record(UsageStatsActivityEventType.PAUSED, second = 10, activity = "FeedActivity"))
         )
 
         assertEquals(1, events.size)
@@ -38,18 +35,15 @@ class UsageStatsSharedSessionEventTrackerTest {
     }
 
     @Test
-    fun activityReplacementAtSameInstantDoesNotPausePackage() {
+    fun activityReplacementWithinSettlementWindowDoesNotPausePackage() {
         val tracker = UsageStatsSharedSessionEventTracker()
         tracker.markForeground(tikTok)
 
-        val events = tracker.accept(
+        val events = tracker.acceptSettled(
             records = listOf(
                 record(UsageStatsActivityEventType.PAUSED, second = 10, activity = "FeedActivity"),
-                record(UsageStatsActivityEventType.RESUMED, second = 10, activity = "ShareActivity")
-            ),
-            allowedPackages = setOf(tikTok),
-            clockSnapshot = snapshot,
-            retainFrom = origin
+                record(UsageStatsActivityEventType.RESUMED, second = 11, activity = "ShareActivity")
+            )
         )
 
         assertTrue(events.isEmpty())
@@ -60,18 +54,8 @@ class UsageStatsSharedSessionEventTrackerTest {
         val tracker = UsageStatsSharedSessionEventTracker()
         val resumed = record(UsageStatsActivityEventType.RESUMED, second = 5, activity = "FeedActivity")
 
-        val first = tracker.accept(
-            records = listOf(resumed),
-            allowedPackages = setOf(tikTok),
-            clockSnapshot = snapshot,
-            retainFrom = origin
-        )
-        val second = tracker.accept(
-            records = listOf(resumed),
-            allowedPackages = setOf(tikTok),
-            clockSnapshot = snapshot,
-            retainFrom = origin
-        )
+        val first = tracker.acceptSettled(records = listOf(resumed))
+        val second = tracker.acceptSettled(records = listOf(resumed))
 
         assertEquals(1, first.size)
         assertTrue(first.single() is SharedSessionEvent.ApplicationForegrounded)
@@ -82,31 +66,52 @@ class UsageStatsSharedSessionEventTrackerTest {
     fun packageStaysForegroundUntilItsLastActivityPauses() {
         val tracker = UsageStatsSharedSessionEventTracker()
 
-        val entered = tracker.accept(
+        val entered = tracker.acceptSettled(
             records = listOf(
                 record(UsageStatsActivityEventType.RESUMED, second = 1, activity = "FeedActivity"),
                 record(UsageStatsActivityEventType.RESUMED, second = 2, activity = "ShareActivity")
-            ),
-            allowedPackages = setOf(tikTok),
-            clockSnapshot = snapshot,
-            retainFrom = origin
+            )
         )
-        val firstPause = tracker.accept(
-            records = listOf(record(UsageStatsActivityEventType.PAUSED, second = 3, activity = "FeedActivity")),
-            allowedPackages = setOf(tikTok),
-            clockSnapshot = snapshot,
-            retainFrom = origin
+        val firstPause = tracker.acceptSettled(
+            records = listOf(record(UsageStatsActivityEventType.PAUSED, second = 3, activity = "FeedActivity"))
         )
-        val finalPause = tracker.accept(
-            records = listOf(record(UsageStatsActivityEventType.PAUSED, second = 4, activity = "ShareActivity")),
-            allowedPackages = setOf(tikTok),
-            clockSnapshot = snapshot,
-            retainFrom = origin
+        val finalPause = tracker.acceptSettled(
+            records = listOf(record(UsageStatsActivityEventType.PAUSED, second = 4, activity = "ShareActivity"))
         )
 
         assertTrue(entered.single() is SharedSessionEvent.ApplicationForegrounded)
         assertTrue(firstPause.isEmpty())
         assertTrue(finalPause.single() is SharedSessionEvent.ApplicationBackgrounded)
+    }
+
+    @Test
+    fun unsettledRecentEventsAreRetriedLater() {
+        val tracker = UsageStatsSharedSessionEventTracker()
+        val resumed = record(UsageStatsActivityEventType.RESUMED, second = 20, activity = "FeedActivity")
+
+        val unsettled = tracker.accept(
+            records = listOf(resumed),
+            allowedPackages = setOf(tikTok),
+            clockSnapshot = snapshot,
+            retainFrom = origin,
+            processThrough = origin.plusSeconds(19),
+            settlementWindow = Duration.ofSeconds(1)
+        )
+        val laterSnapshot = ReconciliationClockSnapshot(
+            observedAt = origin.plusSeconds(22),
+            elapsedRealtime = Duration.ofHours(1).plusSeconds(2)
+        )
+        val settled = tracker.accept(
+            records = listOf(resumed),
+            allowedPackages = setOf(tikTok),
+            clockSnapshot = laterSnapshot,
+            retainFrom = origin,
+            processThrough = origin.plusSeconds(21),
+            settlementWindow = Duration.ofSeconds(1)
+        )
+
+        assertTrue(unsettled.isEmpty())
+        assertTrue(settled.single() is SharedSessionEvent.ApplicationForegrounded)
     }
 
     @Test
@@ -129,11 +134,24 @@ class UsageStatsSharedSessionEventTrackerTest {
             records = listOf(future, beforeBoot),
             allowedPackages = setOf(tikTok),
             clockSnapshot = snapshot,
-            retainFrom = snapshot.observedAt.minus(Duration.ofHours(3))
+            retainFrom = snapshot.observedAt.minus(Duration.ofHours(3)),
+            processThrough = snapshot.observedAt,
+            settlementWindow = Duration.ZERO
         )
 
         assertTrue(events.isEmpty())
     }
+
+    private fun UsageStatsSharedSessionEventTracker.acceptSettled(
+        records: Collection<UsageStatsEventRecord>
+    ): List<SharedSessionEvent> = accept(
+        records = records,
+        allowedPackages = setOf(tikTok),
+        clockSnapshot = snapshot,
+        retainFrom = origin,
+        processThrough = snapshot.observedAt.minusSeconds(1),
+        settlementWindow = Duration.ofSeconds(1)
+    )
 
     private fun record(
         type: UsageStatsActivityEventType,
