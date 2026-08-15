@@ -5,6 +5,12 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface RestrictionProfileSource {
     val activeProfile: StateFlow<RestrictionProfile>
+
+    suspend fun initialize() = Unit
+}
+
+interface RestrictionProfileController {
+    suspend fun activate(identifier: RestrictionProfileIdentifier)
 }
 
 interface SharedSessionEventSource {

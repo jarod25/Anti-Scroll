@@ -6,6 +6,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
+import fr.jarodkohler.antiscroll.domain.restriction.RestrictionProfileController
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionProfileSource
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionEventSource
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionRuntimeStateSource
@@ -30,7 +31,15 @@ annotation class ApplicationCoroutineScope
 abstract class RestrictionRuntimeBindingModule {
     @Binds
     @Singleton
-    abstract fun bindRestrictionProfileSource(source: InMemoryRestrictionProfileSource): RestrictionProfileSource
+    abstract fun bindRestrictionProfileSource(
+        source: PersistentRestrictionProfileSource
+    ): RestrictionProfileSource
+
+    @Binds
+    @Singleton
+    abstract fun bindRestrictionProfileController(
+        source: PersistentRestrictionProfileSource
+    ): RestrictionProfileController
 
     @Binds
     @IntoSet
@@ -72,6 +81,10 @@ object RestrictionRuntimeProvisionModule {
     @Singleton
     @ApplicationCoroutineScope
     fun provideApplicationCoroutineScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    @Provides
+    @Singleton
+    fun provideRestrictionProfileCatalog(): RestrictionProfileCatalog = DefaultRestrictionProfiles
 
     @Provides
     @Singleton

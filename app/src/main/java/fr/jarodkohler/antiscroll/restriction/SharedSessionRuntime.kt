@@ -80,6 +80,7 @@ constructor(
 
     private suspend fun bootstrap() {
         processingMutex.withLock {
+            profileSource.initialize()
             restorePersistedState()
         }
 
