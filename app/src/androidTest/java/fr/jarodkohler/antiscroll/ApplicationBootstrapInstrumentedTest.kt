@@ -2,6 +2,7 @@ package fr.jarodkohler.antiscroll
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -9,13 +10,13 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ApplicationBootstrapInstrumentedTest {
     @Test
-    fun registeredApplicationStartsSharedSessionRuntime() {
+    fun registeredApplicationLeavesRestrictionRuntimeToAccessibilityProcess() {
         val application = InstrumentationRegistry
             .getInstrumentation()
             .targetContext
             .applicationContext
 
         assertTrue(application is AntiScrollApplication)
-        assertTrue((application as AntiScrollApplication).sharedSessionRuntime.isStarted)
+        assertFalse((application as AntiScrollApplication).sharedSessionRuntime.isStarted)
     }
 }
