@@ -7,7 +7,7 @@ import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionPolicy
 import java.time.Duration
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFailsWith
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PersistentRestrictionProfileSourceTest {
@@ -55,6 +55,7 @@ class PersistentRestrictionProfileSourceTest {
     fun activatePersistsSelectionBeforePublishingProfile() = runTest {
         lateinit var source: PersistentRestrictionProfileSource
         val repository = FakeRestrictionProfileSelectionRepository(
+            identifier = observationProfile.identifier,
             onSave = { identifier ->
                 assertEquals(observationProfile, source.activeProfile.value)
                 assertEquals(normalProfile.identifier, identifier)
@@ -75,10 +76,15 @@ class PersistentRestrictionProfileSourceTest {
             RestrictionProfileIdentifier("missing")
         )
         val source = PersistentRestrictionProfileSource(repository, catalog)
+        var failedAsExpected = false
 
-        assertFailsWith<IllegalStateException> {
+        try {
             source.initialize()
+        } catch (_: IllegalStateException) {
+            failedAsExpected = true
         }
+
+        assertTrue(failedAsExpected)
         assertEquals(observationProfile, source.activeProfile.value)
     }
 
