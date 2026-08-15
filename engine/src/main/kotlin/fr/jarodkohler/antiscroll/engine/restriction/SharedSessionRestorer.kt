@@ -21,19 +21,20 @@ class SharedSessionRestorer {
         }
         if (elapsedRealtime.isNegative) return null
 
+        val persistedState = checkpoint.state
         if (checkpoint.bootIdentifier == currentBootIdentifier) {
-            if (elapsedRealtime < checkpoint.lastObservedElapsedRealtime) return null
-            return checkpoint.toState()
+            if (elapsedRealtime < persistedState.lastObservedElapsedRealtime) return null
+            return persistedState
         }
 
-        val restoredAccumulatedDuration = if (checkpoint.foregroundApplication == null) {
-            checkpoint.accumulatedForegroundDuration
+        val restoredAccumulatedDuration = if (persistedState.foregroundApplication == null) {
+            persistedState.accumulatedForegroundDuration
         } else {
-            maxOf(checkpoint.accumulatedForegroundDuration, policy.maximumDuration)
+            maxOf(persistedState.accumulatedForegroundDuration, policy.maximumDuration)
         }
 
         return SharedSessionState.Active(
-            startedAt = checkpoint.startedAt,
+            startedAt = persistedState.startedAt,
             startedAtElapsedRealtime = elapsedRealtime,
             accumulatedForegroundDuration = restoredAccumulatedDuration,
             foregroundApplication = null,

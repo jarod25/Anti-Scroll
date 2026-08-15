@@ -6,6 +6,7 @@ import fr.jarodkohler.antiscroll.domain.application.ApplicationPackageName
 import fr.jarodkohler.antiscroll.domain.restriction.DeviceBootIdentifier
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionProfileIdentifier
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionCheckpoint
+import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionState
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionStateRepository
 import java.time.Duration
 import java.time.Instant
@@ -32,14 +33,16 @@ constructor(database: AntiScrollDatabase) : SharedSessionStateRepository {
         profileIdentifier = RestrictionProfileIdentifier(profileIdentifier),
         profileVersion = profileVersion,
         bootIdentifier = DeviceBootIdentifier(bootIdentifier),
-        startedAt = Instant.ofEpochMilli(startedAtEpochMillis),
-        startedAtElapsedRealtime = Duration.ofMillis(startedAtElapsedRealtimeMillis),
-        accumulatedForegroundDuration = Duration.ofMillis(accumulatedForegroundDurationMillis),
-        foregroundApplication = foregroundPackageName?.let(::ApplicationPackageName),
-        foregroundSinceElapsedRealtime = foregroundSinceElapsedRealtimeMillis?.let(Duration::ofMillis),
-        inactiveSinceElapsedRealtime = inactiveSinceElapsedRealtimeMillis?.let(Duration::ofMillis),
-        lastObservedAt = Instant.ofEpochMilli(lastObservedAtEpochMillis),
-        lastObservedElapsedRealtime = Duration.ofMillis(lastObservedElapsedRealtimeMillis)
+        state = SharedSessionState.Active(
+            startedAt = Instant.ofEpochMilli(startedAtEpochMillis),
+            startedAtElapsedRealtime = Duration.ofMillis(startedAtElapsedRealtimeMillis),
+            accumulatedForegroundDuration = Duration.ofMillis(accumulatedForegroundDurationMillis),
+            foregroundApplication = foregroundPackageName?.let(::ApplicationPackageName),
+            foregroundSinceElapsedRealtime = foregroundSinceElapsedRealtimeMillis?.let(Duration::ofMillis),
+            inactiveSinceElapsedRealtime = inactiveSinceElapsedRealtimeMillis?.let(Duration::ofMillis),
+            lastObservedAt = Instant.ofEpochMilli(lastObservedAtEpochMillis),
+            lastObservedElapsedRealtime = Duration.ofMillis(lastObservedElapsedRealtimeMillis)
+        )
     )
 
     private fun SharedSessionCheckpoint.toEntity(): SharedSessionStateEntity = SharedSessionStateEntity(
@@ -47,14 +50,14 @@ constructor(database: AntiScrollDatabase) : SharedSessionStateRepository {
         profileIdentifier = profileIdentifier.value,
         profileVersion = profileVersion,
         bootIdentifier = bootIdentifier.value,
-        startedAtEpochMillis = startedAt.toEpochMilli(),
-        startedAtElapsedRealtimeMillis = startedAtElapsedRealtime.toMillis(),
-        accumulatedForegroundDurationMillis = accumulatedForegroundDuration.toMillis(),
-        foregroundPackageName = foregroundApplication?.value,
-        foregroundSinceElapsedRealtimeMillis = foregroundSinceElapsedRealtime?.toMillis(),
-        inactiveSinceElapsedRealtimeMillis = inactiveSinceElapsedRealtime?.toMillis(),
-        lastObservedAtEpochMillis = lastObservedAt.toEpochMilli(),
-        lastObservedElapsedRealtimeMillis = lastObservedElapsedRealtime.toMillis()
+        startedAtEpochMillis = state.startedAt.toEpochMilli(),
+        startedAtElapsedRealtimeMillis = state.startedAtElapsedRealtime.toMillis(),
+        accumulatedForegroundDurationMillis = state.accumulatedForegroundDuration.toMillis(),
+        foregroundPackageName = state.foregroundApplication?.value,
+        foregroundSinceElapsedRealtimeMillis = state.foregroundSinceElapsedRealtime?.toMillis(),
+        inactiveSinceElapsedRealtimeMillis = state.inactiveSinceElapsedRealtime?.toMillis(),
+        lastObservedAtEpochMillis = state.lastObservedAt.toEpochMilli(),
+        lastObservedElapsedRealtimeMillis = state.lastObservedElapsedRealtime.toMillis()
     )
 
     private companion object {
