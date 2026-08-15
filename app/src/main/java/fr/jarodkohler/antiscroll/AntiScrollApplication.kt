@@ -19,7 +19,9 @@ class AntiScrollApplication :
 
     override fun onCreate() {
         super.onCreate()
-        sharedSessionRuntime.start()
+        if (shouldStartSharedSessionRuntime(packageName, Application.getProcessName())) {
+            sharedSessionRuntime.start()
+        }
     }
 
     override val workManagerConfiguration: Configuration
@@ -27,3 +29,6 @@ class AntiScrollApplication :
             .setWorkerFactory(workerFactory)
             .build()
 }
+
+internal fun shouldStartSharedSessionRuntime(applicationPackageName: String, processName: String): Boolean =
+    processName == "$applicationPackageName:accessibility"
