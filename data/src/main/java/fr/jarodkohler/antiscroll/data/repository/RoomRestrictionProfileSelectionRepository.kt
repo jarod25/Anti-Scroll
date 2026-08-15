@@ -10,7 +10,8 @@ import javax.inject.Singleton
 @Singleton
 class RoomRestrictionProfileSelectionRepository
 @Inject
-constructor(database: AntiScrollDatabase) : RestrictionProfileSelectionRepository {
+constructor(database: AntiScrollDatabase) :
+    RestrictionProfileSelectionRepository {
     private val dao = database.restrictionProfileSelectionDao()
 
     override suspend fun load(): RestrictionProfileIdentifier? =
