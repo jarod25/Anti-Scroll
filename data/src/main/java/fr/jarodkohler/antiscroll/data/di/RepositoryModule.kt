@@ -7,11 +7,13 @@ import dagger.hilt.components.SingletonComponent
 import fr.jarodkohler.antiscroll.data.repository.RoomDailyUsageRepository
 import fr.jarodkohler.antiscroll.data.repository.RoomMonitoredApplicationRepository
 import fr.jarodkohler.antiscroll.data.repository.RoomObservationRepository
+import fr.jarodkohler.antiscroll.data.repository.RoomSharedSessionStateRepository
 import fr.jarodkohler.antiscroll.domain.observation.DailyUsageRepository
 import fr.jarodkohler.antiscroll.domain.observation.MonitoredApplicationRepository
 import fr.jarodkohler.antiscroll.domain.observation.ObservationCommitRepository
 import fr.jarodkohler.antiscroll.domain.observation.ObservationStateRepository
 import fr.jarodkohler.antiscroll.domain.observation.UsageEventRepository
+import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionStateRepository
 import javax.inject.Singleton
 
 @Module
@@ -38,4 +40,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDailyUsageRepository(repository: RoomDailyUsageRepository): DailyUsageRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSharedSessionStateRepository(
+        repository: RoomSharedSessionStateRepository
+    ): SharedSessionStateRepository
 }

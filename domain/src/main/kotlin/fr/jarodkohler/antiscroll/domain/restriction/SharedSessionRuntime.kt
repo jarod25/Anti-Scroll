@@ -11,7 +11,13 @@ interface SharedSessionEventSource {
     val events: Flow<SharedSessionEvent>
 }
 
+enum class SharedSessionRuntimeStatus {
+    STARTING,
+    READY
+}
+
 data class SharedSessionRuntimeSnapshot(
+    val status: SharedSessionRuntimeStatus,
     val profile: RestrictionProfile,
     val state: SharedSessionState,
     val lastTransition: SharedSessionTransition?,

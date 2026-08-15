@@ -4,6 +4,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -100,8 +101,44 @@ class DatabaseSchemaInstrumentedTest {
         }
     }
 
+    @Test
+    fun migrationThreeToFourPreservesObservationDataAndCreatesSharedSessionState() {
+        migrationHelper.createDatabase(VERSION_THREE_DATABASE, 3).apply {
+            execSQL(
+                "INSERT INTO usage_events " +
+                    "(event_id, package_name, event_type, occurred_at_epoch_millis, source, reliability, " +
+                    "activity_class_name) VALUES ('event-2', 'com.instagram.android', 'FOREGROUND_ENTERED', " +
+                    "2000, 'USAGE_STATS', 'OBSERVED', 'MainActivity')"
+            )
+            close()
+        }
+
+        val database = migrationHelper.runMigrationsAndValidate(
+            VERSION_THREE_DATABASE,
+            4,
+            true,
+            DatabaseMigrations.MIGRATION_3_4
+        )
+
+        try {
+            database.query(
+                "SELECT package_name, activity_class_name FROM usage_events WHERE event_id = 'event-2'"
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("com.instagram.android", cursor.getString(0))
+                assertEquals("MainActivity", cursor.getString(1))
+            }
+            database.query("SELECT * FROM shared_session_state").use { cursor ->
+                assertFalse(cursor.moveToFirst())
+            }
+        } finally {
+            database.close()
+        }
+    }
+
     private companion object {
         const val VERSION_ONE_DATABASE = "anti-scroll-migration-v1-test"
         const val VERSION_TWO_DATABASE = "anti-scroll-migration-v2-test"
+        const val VERSION_THREE_DATABASE = "anti-scroll-migration-v3-test"
     }
 }
