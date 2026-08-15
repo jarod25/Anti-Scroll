@@ -18,12 +18,11 @@ The domain exposes `SharedSessionCheckpoint` and `SharedSessionStateRepository`.
 
 - restriction profile identifier and version;
 - device boot identifier;
-- session start wall-clock and monotonic anchors;
-- accumulated monitored foreground duration;
-- current foreground package or inactivity anchor;
-- last observed wall-clock and monotonic timestamps.
+- the active shared-session state needed to rebuild duration accounting.
 
-`SharedSessionRuntime` restores the checkpoint before subscribing to live session event sources. It then recalculates the current restriction decision and one-shot deadline from the restored state rather than persisting either result.
+`SharedSessionRuntime` restores the checkpoint before subscribing to live session event sources. While restoration is in progress, its snapshot status is `STARTING`; only a restored runtime is published as `READY`. This prevents future enforcement code from interpreting the temporary in-memory `Inactive` placeholder as an authoritative allowance.
+
+After restoration, the runtime recalculates the current restriction decision and one-shot deadline from the restored state rather than persisting either result.
 
 The Android integration reads `Settings.Global.BOOT_COUNT` through a small `DeviceBootIdentifierProvider`. `SystemClock.elapsedRealtime()` remains the duration clock.
 
@@ -33,7 +32,7 @@ For restoration after a reboot, monotonic anchors are re-created on the current 
 
 A checkpoint whose profile identifier or version does not match the active profile is discarded rather than silently reinterpreted.
 
-The production profile remains `observation`, so this change does not activate user-visible restrictions.
+The production profile remains `observation`, so this change does not activate user-visible restrictions. The active profile source itself is still process-local; a restrictive production profile must not be enabled until its selection is also made durable.
 
 ## Alternatives considered
 
@@ -64,6 +63,7 @@ No cooldown state exists in the current engine. Adding speculative persistence f
 - process death no longer resets an active shared session;
 - same-boot restoration keeps exact monotonic duration accounting;
 - reboot cannot provide a fresh session allowance for a session that was previously foreground;
+- runtime readiness is explicit during asynchronous restoration;
 - restriction decisions and deadlines remain derived values;
 - the accessibility service and foreground lifetime service remain free of business state;
 - Room remains the single durable store for structured runtime data;
@@ -73,7 +73,8 @@ No cooldown state exists in the current engine. Adding speculative persistence f
 
 - a rebooted foreground session is restored conservatively because its exact shutdown interval is unknowable from the in-memory runtime alone;
 - paused-session inactivity is re-anchored after reboot and may therefore remain in the same session longer than it would without a reboot;
-- an asynchronous application bootstrap is now required before live session event collection begins;
+- an asynchronous application bootstrap is required before the runtime becomes `READY`;
+- active-profile selection is not yet durable and must be addressed before a restrictive profile is enabled in production;
 - cooldown, quota and scheduled-block persistence remain future work because those states do not exist yet.
 
 ## Migration and rollback
