@@ -1,7 +1,6 @@
 package fr.jarodkohler.antiscroll.monitoring.permission
 
 import android.accessibilityservice.AccessibilityServiceInfo
-import android.app.ActivityManager
 import android.app.AppOpsManager
 import android.content.ComponentName
 import android.content.Context
@@ -62,23 +61,12 @@ constructor(
                         androidServiceInfo.name
                     ) == expectedComponent
                 }
-            val isConnected = accessibilityConnection.isConnected || isServiceRunning(expectedComponent)
 
             accessibilityMonitoringStatus(
                 isEnabled = isEnabled,
-                isConnected = isConnected
+                isConnected = accessibilityConnection.isConnected
             )
         }.getOrElse { AccessibilityMonitoringStatus.ERROR }
-    }
-
-    private fun isServiceRunning(expectedComponent: ComponentName): Boolean {
-        val activityManager = context.getSystemService(ActivityManager::class.java) ?: return false
-
-        @Suppress("DEPRECATION")
-        val runningServices = activityManager.getRunningServices(Int.MAX_VALUE)
-        return runningServices.any { service ->
-            service.service == expectedComponent && service.pid != 0
-        }
     }
 }
 
