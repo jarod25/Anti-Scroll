@@ -11,6 +11,7 @@ import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionEvent
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionEventSource
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionRuntimeSnapshot
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionRuntimeStateSource
+import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionRuntimeStatus
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionState
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionStateRepository
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionTransition
@@ -55,6 +56,7 @@ constructor(
     private var deadlineHandle: SharedSessionDeadlineHandle? = null
     private val mutableSnapshots = MutableStateFlow(
         SharedSessionRuntimeSnapshot(
+            status = SharedSessionRuntimeStatus.STARTING,
             profile = profileSource.activeProfile.value,
             state = SharedSessionState.Inactive,
             lastTransition = null,
@@ -131,6 +133,7 @@ constructor(
         }
 
         mutableSnapshots.value = SharedSessionRuntimeSnapshot(
+            status = SharedSessionRuntimeStatus.READY,
             profile = profile,
             state = restoredState ?: SharedSessionState.Inactive,
             lastTransition = null,
@@ -147,6 +150,7 @@ constructor(
         if (activeState == null) {
             stateRepository.clear()
             mutableSnapshots.value = SharedSessionRuntimeSnapshot(
+                status = SharedSessionRuntimeStatus.READY,
                 profile = profile,
                 state = SharedSessionState.Inactive,
                 lastTransition = null,
@@ -175,6 +179,7 @@ constructor(
 
         persistState(profile, reduction.state)
         mutableSnapshots.value = SharedSessionRuntimeSnapshot(
+            status = SharedSessionRuntimeStatus.READY,
             profile = profile,
             state = reduction.state,
             lastTransition = reduction.transition,
@@ -263,6 +268,7 @@ constructor(
         deadlineHandle = null
 
         val current = mutableSnapshots.value
+        if (current.status != SharedSessionRuntimeStatus.READY) return
         if (current.lastDecision is RestrictionDecision.Blocked) return
 
         val policy = current.profile.sharedSessionPolicy ?: return
