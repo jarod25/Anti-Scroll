@@ -422,9 +422,8 @@ class SharedSessionRuntimeTest {
         }
     }
 
-    private class FakeSharedSessionStateRepository(
-        var checkpoint: SharedSessionCheckpoint? = null
-    ) : SharedSessionStateRepository {
+    private class FakeSharedSessionStateRepository(var checkpoint: SharedSessionCheckpoint? = null) :
+        SharedSessionStateRepository {
         override suspend fun load(): SharedSessionCheckpoint? = checkpoint
 
         override suspend fun save(checkpoint: SharedSessionCheckpoint) {
@@ -436,9 +435,8 @@ class SharedSessionRuntimeTest {
         }
     }
 
-    private class FakeDeviceBootIdentifierProvider(
-        private val bootIdentifier: DeviceBootIdentifier
-    ) : DeviceBootIdentifierProvider {
+    private class FakeDeviceBootIdentifierProvider(private val bootIdentifier: DeviceBootIdentifier) :
+        DeviceBootIdentifierProvider {
         override fun current(): DeviceBootIdentifier = bootIdentifier
     }
 

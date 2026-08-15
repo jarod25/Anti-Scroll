@@ -16,7 +16,8 @@ import javax.inject.Singleton
 @Singleton
 class RoomSharedSessionStateRepository
 @Inject
-constructor(database: AntiScrollDatabase) : SharedSessionStateRepository {
+constructor(database: AntiScrollDatabase) :
+    SharedSessionStateRepository {
     private val dao = database.sharedSessionStateDao()
 
     override suspend fun load(): SharedSessionCheckpoint? = dao.get()?.toDomain()

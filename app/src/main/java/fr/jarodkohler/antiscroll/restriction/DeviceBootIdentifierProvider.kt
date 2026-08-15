@@ -14,7 +14,8 @@ interface DeviceBootIdentifierProvider {
 @Singleton
 class AndroidDeviceBootIdentifierProvider
 @Inject
-constructor(@ApplicationContext private val context: Context) : DeviceBootIdentifierProvider {
+constructor(@ApplicationContext private val context: Context) :
+    DeviceBootIdentifierProvider {
     override fun current(): DeviceBootIdentifier = DeviceBootIdentifier(
         Settings.Global.getInt(
             context.contentResolver,

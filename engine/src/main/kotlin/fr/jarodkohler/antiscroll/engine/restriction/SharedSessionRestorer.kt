@@ -16,9 +16,8 @@ class SharedSessionRestorer {
         elapsedRealtime: Duration
     ): SharedSessionState.Active? {
         val policy = profile.sharedSessionPolicy ?: return null
-        if (checkpoint.profileIdentifier != profile.identifier || checkpoint.profileVersion != profile.version) {
-            return null
-        }
+        if (checkpoint.profileIdentifier != profile.identifier) return null
+        if (checkpoint.profileVersion != profile.version) return null
         if (elapsedRealtime.isNegative) return null
 
         val persistedState = checkpoint.state
