@@ -1,6 +1,6 @@
 package fr.jarodkohler.antiscroll.data.repository
 
-import fr.jarodkohler.antiscroll.data.local.SharedSessionStateDao
+import fr.jarodkohler.antiscroll.data.local.AntiScrollDatabase
 import fr.jarodkohler.antiscroll.data.local.SharedSessionStateEntity
 import fr.jarodkohler.antiscroll.domain.application.ApplicationPackageName
 import fr.jarodkohler.antiscroll.domain.restriction.DeviceBootIdentifier
@@ -15,7 +15,9 @@ import javax.inject.Singleton
 @Singleton
 class RoomSharedSessionStateRepository
 @Inject
-constructor(private val dao: SharedSessionStateDao) : SharedSessionStateRepository {
+constructor(database: AntiScrollDatabase) : SharedSessionStateRepository {
+    private val dao = database.sharedSessionStateDao()
+
     override suspend fun load(): SharedSessionCheckpoint? = dao.get()?.toDomain()
 
     override suspend fun save(checkpoint: SharedSessionCheckpoint) {
