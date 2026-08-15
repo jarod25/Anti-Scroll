@@ -31,9 +31,7 @@ annotation class ApplicationCoroutineScope
 abstract class RestrictionRuntimeBindingModule {
     @Binds
     @Singleton
-    abstract fun bindRestrictionProfileSource(
-        source: PersistentRestrictionProfileSource
-    ): RestrictionProfileSource
+    abstract fun bindRestrictionProfileSource(source: PersistentRestrictionProfileSource): RestrictionProfileSource
 
     @Binds
     @Singleton
