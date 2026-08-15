@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!--
+        Android 17 targeting is deferred until restriction enforcement can be validated
+        against API 37 behavior changes. The app compiles with API 37 while continuing
+        to target API 36 intentionally.
+    -->
+    <issue id="OldTargetApi">
+        <ignore path="build.gradle.kts" />
+    </issue>
+</lint>

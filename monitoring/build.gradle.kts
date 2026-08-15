@@ -6,11 +6,7 @@ plugins {
 
 android {
     namespace = "fr.jarodkohler.antiscroll.monitoring"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 29
@@ -19,6 +15,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    lint {
+        warningsAsErrors = true
     }
 }
 
