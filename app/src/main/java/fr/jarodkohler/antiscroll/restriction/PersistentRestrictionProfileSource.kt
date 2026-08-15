@@ -19,7 +19,8 @@ class PersistentRestrictionProfileSource
 constructor(
     private val repository: RestrictionProfileSelectionRepository,
     private val catalog: RestrictionProfileCatalog
-) : RestrictionProfileSource, RestrictionProfileController {
+) : RestrictionProfileSource,
+    RestrictionProfileController {
     private val initializationMutex = Mutex()
     private val mutableActiveProfile = MutableStateFlow(catalog.defaultProfile)
     private var initialized = false
