@@ -1,21 +1,25 @@
 package fr.jarodkohler.antiscroll.restriction
 
 import fr.jarodkohler.antiscroll.domain.application.ApplicationPackageName
+import fr.jarodkohler.antiscroll.domain.restriction.DeviceBootIdentifier
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionDecision
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionProfile
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionProfileIdentifier
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionProfileSource
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionReasonCode
+import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionCheckpoint
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionEndReason
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionEvent
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionEventSource
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionPolicy
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionState
+import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionStateRepository
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionTransition
 import fr.jarodkohler.antiscroll.engine.restriction.RestrictionEngine
 import fr.jarodkohler.antiscroll.engine.restriction.SessionLimitRule
 import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionDeadlinePlanner
 import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionReducer
+import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionRestorer
 import java.time.Duration
 import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -115,6 +119,45 @@ class SharedSessionRuntimeTest {
         assertEquals(SharedSessionTransition.Started(tikTok), snapshot.lastTransition)
         assertTrue(snapshot.lastDecision is RestrictionDecision.Allowed)
         assertEquals(Duration.ofMinutes(10), deadlineScheduler.requests.single().delayDuration)
+    }
+
+    @Test
+    fun persistedSessionRestoresOnSameBootAndRearmsRemainingDeadline() = runTest {
+        val persistedState = SharedSessionState.Active(
+            startedAt = origin,
+            startedAtElapsedRealtime = Duration.ZERO,
+            accumulatedForegroundDuration = Duration.ZERO,
+            foregroundApplication = tikTok,
+            foregroundSinceElapsedRealtime = Duration.ZERO,
+            inactiveSinceElapsedRealtime = null,
+            lastObservedAt = origin.plusSeconds(240),
+            lastObservedElapsedRealtime = Duration.ofMinutes(4)
+        )
+        val repository = FakeSharedSessionStateRepository(
+            SharedSessionCheckpoint.from(
+                profile = normalProfile,
+                state = persistedState,
+                bootIdentifier = DeviceBootIdentifier(7)
+            )
+        )
+        val deadlineScheduler = FakeDeadlineScheduler()
+        val runtime = runtime(
+            profileSource = FakeRestrictionProfileSource(normalProfile),
+            eventSource = FakeSharedSessionEventSource(),
+            clock = FakeRuntimeClock(origin.plusSeconds(360), Duration.ofMinutes(6)),
+            deadlineScheduler = deadlineScheduler,
+            stateRepository = repository,
+            bootIdentifier = DeviceBootIdentifier(7)
+        )
+
+        runtime.start()
+        runCurrent()
+
+        val restoredState = runtime.snapshots.value.state as SharedSessionState.Active
+        assertEquals(Duration.ofMinutes(6), restoredState.foregroundDurationAt(Duration.ofMinutes(6)))
+        assertTrue(runtime.snapshots.value.lastDecision is RestrictionDecision.Allowed)
+        assertEquals(Duration.ofMinutes(4), deadlineScheduler.requests.single().delayDuration)
+        assertEquals(DeviceBootIdentifier(7), repository.checkpoint?.bootIdentifier)
     }
 
     @Test
@@ -290,11 +333,13 @@ class SharedSessionRuntimeTest {
         val eventSource = FakeSharedSessionEventSource()
         val deadlineScheduler = FakeDeadlineScheduler()
         val clock = FakeRuntimeClock(origin.plusSeconds(60), Duration.ofMinutes(1))
+        val repository = FakeSharedSessionStateRepository()
         val runtime = runtime(
             profileSource = profileSource,
             eventSource = eventSource,
             clock = clock,
-            deadlineScheduler = deadlineScheduler
+            deadlineScheduler = deadlineScheduler,
+            stateRepository = repository
         )
         val updatedProfile = normalProfile.copy(version = 2)
 
@@ -302,6 +347,7 @@ class SharedSessionRuntimeTest {
         runCurrent()
         eventSource.emit(foreground(tikTok, minute = 0))
         runCurrent()
+        assertTrue(repository.checkpoint != null)
         profileSource.replace(updatedProfile)
         runCurrent()
 
@@ -313,6 +359,7 @@ class SharedSessionRuntimeTest {
             snapshot.lastTransition
         )
         assertNull(snapshot.lastDecision)
+        assertNull(repository.checkpoint)
         assertTrue(deadlineScheduler.requests.single().cancelled)
     }
 
@@ -320,15 +367,20 @@ class SharedSessionRuntimeTest {
         profileSource: RestrictionProfileSource,
         eventSource: SharedSessionEventSource,
         clock: SharedSessionRuntimeClock,
-        deadlineScheduler: SharedSessionDeadlineScheduler = FakeDeadlineScheduler()
+        deadlineScheduler: SharedSessionDeadlineScheduler = FakeDeadlineScheduler(),
+        stateRepository: SharedSessionStateRepository = FakeSharedSessionStateRepository(),
+        bootIdentifier: DeviceBootIdentifier = DeviceBootIdentifier(1)
     ): SharedSessionRuntime = SharedSessionRuntime(
         eventSources = setOf(eventSource),
         profileSource = profileSource,
+        stateRepository = stateRepository,
         reducer = SharedSessionReducer(),
+        restorer = SharedSessionRestorer(),
         restrictionEngine = RestrictionEngine(listOf(SessionLimitRule())),
         deadlinePlanner = SharedSessionDeadlinePlanner(),
         deadlineScheduler = deadlineScheduler,
         clock = clock,
+        bootIdentifierProvider = FakeDeviceBootIdentifierProvider(bootIdentifier),
         applicationScope = backgroundScope
     )
 
@@ -368,6 +420,26 @@ class SharedSessionRuntimeTest {
         fun emit(event: SharedSessionEvent) {
             check(mutableEvents.tryEmit(event)) { "Test event buffer is full" }
         }
+    }
+
+    private class FakeSharedSessionStateRepository(
+        var checkpoint: SharedSessionCheckpoint? = null
+    ) : SharedSessionStateRepository {
+        override suspend fun load(): SharedSessionCheckpoint? = checkpoint
+
+        override suspend fun save(checkpoint: SharedSessionCheckpoint) {
+            this.checkpoint = checkpoint
+        }
+
+        override suspend fun clear() {
+            checkpoint = null
+        }
+    }
+
+    private class FakeDeviceBootIdentifierProvider(
+        private val bootIdentifier: DeviceBootIdentifier
+    ) : DeviceBootIdentifierProvider {
+        override fun current(): DeviceBootIdentifier = bootIdentifier
     }
 
     private class FakeDeadlineScheduler : SharedSessionDeadlineScheduler {

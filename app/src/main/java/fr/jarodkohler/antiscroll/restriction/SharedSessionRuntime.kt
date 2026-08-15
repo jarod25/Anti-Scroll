@@ -1,19 +1,23 @@
 package fr.jarodkohler.antiscroll.restriction
 
+import fr.jarodkohler.antiscroll.domain.restriction.DeviceBootIdentifier
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionDecision
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionEvaluationContext
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionProfile
 import fr.jarodkohler.antiscroll.domain.restriction.RestrictionProfileSource
+import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionCheckpoint
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionEndReason
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionEvent
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionEventSource
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionRuntimeSnapshot
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionRuntimeStateSource
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionState
+import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionStateRepository
 import fr.jarodkohler.antiscroll.domain.restriction.SharedSessionTransition
 import fr.jarodkohler.antiscroll.engine.restriction.RestrictionEngine
 import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionDeadlinePlanner
 import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionReducer
+import fr.jarodkohler.antiscroll.engine.restriction.SharedSessionRestorer
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -24,6 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -33,15 +38,19 @@ class SharedSessionRuntime
 constructor(
     private val eventSources: Set<@JvmSuppressWildcards SharedSessionEventSource>,
     private val profileSource: RestrictionProfileSource,
+    private val stateRepository: SharedSessionStateRepository,
     private val reducer: SharedSessionReducer,
+    private val restorer: SharedSessionRestorer,
     private val restrictionEngine: RestrictionEngine,
     private val deadlinePlanner: SharedSessionDeadlinePlanner,
     private val deadlineScheduler: SharedSessionDeadlineScheduler,
     private val clock: SharedSessionRuntimeClock,
+    private val bootIdentifierProvider: DeviceBootIdentifierProvider,
     @param:ApplicationCoroutineScope private val applicationScope: CoroutineScope
 ) : SharedSessionRuntimeStateSource {
     private val started = AtomicBoolean(false)
     private val processingMutex = Mutex()
+    private var currentBootIdentifier: DeviceBootIdentifier? = null
     private var deadlineGeneration = 0L
     private var deadlineHandle: SharedSessionDeadlineHandle? = null
     private val mutableSnapshots = MutableStateFlow(
@@ -61,6 +70,17 @@ constructor(
     fun start(): Boolean {
         if (!started.compareAndSet(false, true)) return false
 
+        applicationScope.launch {
+            bootstrap()
+        }
+        return true
+    }
+
+    private suspend fun bootstrap() {
+        processingMutex.withLock {
+            restorePersistedState()
+        }
+
         profileSource.activeProfile
             .onEach { profile ->
                 processingMutex.withLock {
@@ -78,16 +98,54 @@ constructor(
                 }
                 .launchIn(applicationScope)
         }
-
-        return true
     }
 
-    private fun observeProfile(profile: RestrictionProfile) {
+    private suspend fun restorePersistedState() {
+        val profile = profileSource.activeProfile.value
+        val bootIdentifier = bootIdentifierProvider.current()
+        currentBootIdentifier = bootIdentifier
+        val checkpoint = stateRepository.load()
+        val currentElapsedRealtime = clock.elapsedRealtime()
+        val restoredState = checkpoint?.let { persisted ->
+            restorer.restore(
+                checkpoint = persisted,
+                profile = profile,
+                currentBootIdentifier = bootIdentifier,
+                now = clock.now(),
+                elapsedRealtime = currentElapsedRealtime
+            )
+        }
+
+        if (restoredState == null) {
+            if (checkpoint != null) {
+                stateRepository.clear()
+            }
+        } else {
+            stateRepository.save(
+                SharedSessionCheckpoint.from(
+                    profile = profile,
+                    state = restoredState,
+                    bootIdentifier = bootIdentifier
+                )
+            )
+        }
+
+        mutableSnapshots.value = SharedSessionRuntimeSnapshot(
+            profile = profile,
+            state = restoredState ?: SharedSessionState.Inactive,
+            lastTransition = null,
+            lastDecision = restoredState?.let { state -> decisionForRestoredState(state, profile) }
+        )
+        refreshDeadline()
+    }
+
+    private suspend fun observeProfile(profile: RestrictionProfile) {
         val current = mutableSnapshots.value
         if (profile == current.profile) return
 
         val activeState = current.state as? SharedSessionState.Active
         if (activeState == null) {
+            stateRepository.clear()
             mutableSnapshots.value = SharedSessionRuntimeSnapshot(
                 profile = profile,
                 state = SharedSessionState.Inactive,
@@ -115,6 +173,7 @@ constructor(
             policy = currentPolicy
         )
 
+        persistState(profile, reduction.state)
         mutableSnapshots.value = SharedSessionRuntimeSnapshot(
             profile = profile,
             state = reduction.state,
@@ -124,7 +183,7 @@ constructor(
         refreshDeadline()
     }
 
-    private fun processEvent(event: SharedSessionEvent) {
+    private suspend fun processEvent(event: SharedSessionEvent) {
         val current = mutableSnapshots.value
         val policy = current.profile.sharedSessionPolicy ?: return
         val reduction = reducer.reduce(
@@ -139,12 +198,31 @@ constructor(
             profile = current.profile
         )
 
+        persistState(current.profile, reduction.state)
         mutableSnapshots.value = current.copy(
             state = reduction.state,
             lastTransition = reduction.transition,
             lastDecision = decision
         )
         refreshDeadline()
+    }
+
+    private suspend fun persistState(profile: RestrictionProfile, state: SharedSessionState) {
+        val activeState = state as? SharedSessionState.Active
+        if (activeState == null) {
+            stateRepository.clear()
+            return
+        }
+
+        stateRepository.save(
+            SharedSessionCheckpoint.from(
+                profile = profile,
+                state = activeState,
+                bootIdentifier = checkNotNull(currentBootIdentifier) {
+                    "Shared-session persistence requires completed runtime bootstrap"
+                }
+            )
+        )
     }
 
     private suspend fun onDeadlineReached(generation: Long) {
@@ -203,6 +281,23 @@ constructor(
         deadlineHandle = deadlineScheduler.schedule(delay) {
             onDeadlineReached(scheduledGeneration)
         }
+    }
+
+    private fun decisionForRestoredState(
+        state: SharedSessionState.Active,
+        profile: RestrictionProfile
+    ): RestrictionDecision? {
+        val packageName = state.foregroundApplication ?: return null
+        val elapsedRealtime = maxOf(clock.elapsedRealtime(), state.lastObservedElapsedRealtime)
+        return restrictionEngine.evaluate(
+            RestrictionEvaluationContext(
+                targetPackageName = packageName,
+                evaluatedAt = clock.now(),
+                elapsedRealtime = elapsedRealtime,
+                profile = profile,
+                sharedSessionState = state
+            )
+        )
     }
 
     private fun decisionFor(

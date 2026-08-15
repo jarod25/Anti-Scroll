@@ -103,4 +103,28 @@ object DatabaseMigrations {
             )
         }
     }
+
+    val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `shared_session_state` (
+                    `singleton_id` INTEGER NOT NULL,
+                    `profile_identifier` TEXT NOT NULL,
+                    `profile_version` INTEGER NOT NULL,
+                    `boot_identifier` INTEGER NOT NULL,
+                    `started_at_epoch_millis` INTEGER NOT NULL,
+                    `started_at_elapsed_realtime_millis` INTEGER NOT NULL,
+                    `accumulated_foreground_duration_millis` INTEGER NOT NULL,
+                    `foreground_package_name` TEXT,
+                    `foreground_since_elapsed_realtime_millis` INTEGER,
+                    `inactive_since_elapsed_realtime_millis` INTEGER,
+                    `last_observed_at_epoch_millis` INTEGER NOT NULL,
+                    `last_observed_elapsed_realtime_millis` INTEGER NOT NULL,
+                    PRIMARY KEY(`singleton_id`)
+                )
+                """.trimIndent()
+            )
+        }
+    }
 }
