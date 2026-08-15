@@ -136,9 +136,45 @@ class DatabaseSchemaInstrumentedTest {
         }
     }
 
+    @Test
+    fun migrationFourToFivePreservesConfigurationAndCreatesProfileSelection() {
+        migrationHelper.createDatabase(VERSION_FOUR_DATABASE, 4).apply {
+            execSQL(
+                "INSERT INTO monitored_applications " +
+                    "(package_name, is_enabled, added_at_epoch_millis) " +
+                    "VALUES ('com.instagram.android', 1, 3000)"
+            )
+            close()
+        }
+
+        val database = migrationHelper.runMigrationsAndValidate(
+            VERSION_FOUR_DATABASE,
+            5,
+            true,
+            DatabaseMigrations.MIGRATION_4_5
+        )
+
+        try {
+            database.query(
+                "SELECT is_enabled, added_at_epoch_millis FROM monitored_applications " +
+                    "WHERE package_name = 'com.instagram.android'"
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(1, cursor.getInt(0))
+                assertEquals(3_000L, cursor.getLong(1))
+            }
+            database.query("SELECT * FROM restriction_profile_selection").use { cursor ->
+                assertFalse(cursor.moveToFirst())
+            }
+        } finally {
+            database.close()
+        }
+    }
+
     private companion object {
         const val VERSION_ONE_DATABASE = "anti-scroll-migration-v1-test"
         const val VERSION_TWO_DATABASE = "anti-scroll-migration-v2-test"
         const val VERSION_THREE_DATABASE = "anti-scroll-migration-v3-test"
+        const val VERSION_FOUR_DATABASE = "anti-scroll-migration-v4-test"
     }
 }

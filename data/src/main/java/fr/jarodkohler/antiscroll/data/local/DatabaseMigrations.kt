@@ -127,4 +127,18 @@ object DatabaseMigrations {
             )
         }
     }
+
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `restriction_profile_selection` (
+                    `singleton_id` INTEGER NOT NULL,
+                    `profile_identifier` TEXT NOT NULL,
+                    PRIMARY KEY(`singleton_id`)
+                )
+                """.trimIndent()
+            )
+        }
+    }
 }

@@ -4,7 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 object AntiScrollDatabaseSchema {
-    const val VERSION = 4
+    const val VERSION = 5
     const val NAME = "anti_scroll.db"
 }
 
@@ -16,7 +16,8 @@ object AntiScrollDatabaseSchema {
         CollectionCheckpointEntity::class,
         CollectionGapEntity::class,
         MonitoringHealthEntity::class,
-        SharedSessionStateEntity::class
+        SharedSessionStateEntity::class,
+        RestrictionProfileSelectionEntity::class
     ],
     version = AntiScrollDatabaseSchema.VERSION,
     exportSchema = true
@@ -29,4 +30,6 @@ abstract class AntiScrollDatabase : RoomDatabase() {
     abstract fun dailyUsageDao(): DailyUsageDao
 
     abstract fun sharedSessionStateDao(): SharedSessionStateDao
+
+    abstract fun restrictionProfileSelectionDao(): RestrictionProfileSelectionDao
 }
