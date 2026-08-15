@@ -19,5 +19,3 @@ data class ObservationReconciliationPolicy(
         }
     }
 }
-
-private fun Duration.isPositive(): Boolean = !isZero && !isNegative

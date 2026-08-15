@@ -1,5 +1,10 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Anti-Scroll Test</string>
-    <string name="accessibility_service_label">Anti-Scroll test monitoring</string>
-    <string name="accessibility_service_description">Test-only foreground monitoring service. It is installed under a separate application identifier and does not replace the regular Anti-Scroll installation.</string>
+    <!-- These values override resources consumed by the monitoring module in the isolated device-test application. -->
+    <string
+        name="accessibility_service_label"
+        tools:ignore="UnusedResources">Anti-Scroll test monitoring</string>
+    <string
+        name="accessibility_service_description"
+        tools:ignore="UnusedResources">Test-only foreground monitoring service. It is installed under a separate application identifier and does not replace the regular Anti-Scroll installation.</string>
 </resources>

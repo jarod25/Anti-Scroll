@@ -19,6 +19,7 @@ import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -58,6 +59,7 @@ data class DashboardUiState(
     val loadFailed: Boolean = false
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     dailyUsageRepository: DailyUsageRepository,
