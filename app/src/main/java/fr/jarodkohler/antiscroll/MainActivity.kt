@@ -17,7 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
 import fr.jarodkohler.antiscroll.dashboard.DashboardViewModel
-import fr.jarodkohler.antiscroll.monitoring.lifetime.MonitoringForegroundService
+import fr.jarodkohler.antiscroll.observation.MonitoringForegroundServiceStarter
 import fr.jarodkohler.antiscroll.observation.ObservationWorkScheduler
 import fr.jarodkohler.antiscroll.ui.theme.AntiScrollTheme
 import javax.inject.Inject
@@ -30,6 +30,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var observationWorkScheduler: ObservationWorkScheduler
+
+    @Inject
+    lateinit var monitoringForegroundServiceStarter: MonitoringForegroundServiceStarter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +62,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        MonitoringForegroundService.start(this)
+        monitoringForegroundServiceStarter.startIfEligible()
     }
 
     override fun onResume() {
