@@ -11,11 +11,15 @@ class BootCompletedReceiver : BroadcastReceiver() {
     @Inject
     lateinit var scheduler: ObservationWorkScheduler
 
+    @Inject
+    lateinit var monitoringForegroundServiceStarter: MonitoringForegroundServiceStarter
+
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action !in SUPPORTED_ACTIONS) return
 
         scheduler.ensurePeriodicReconciliation()
         scheduler.requestImmediateReconciliation()
+        monitoringForegroundServiceStarter.startIfEligible()
     }
 
     private companion object {

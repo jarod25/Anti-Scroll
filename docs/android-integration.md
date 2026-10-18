@@ -133,21 +133,15 @@ The shared-session runtime currently observes decisions only. It does not start 
 
 ## Foreground execution
 
-The observation foundation, accessibility foreground-signal service and process runtime do not introduce a permanent foreground service or an unconditional polling loop.
+The user-enabled AccessibilityService is managed by Android, not by the settings Activity. Closing the Activity or removing it from Recents does not itself disable accessibility monitoring. Its manifest explicitly declares `stopWithTask=false`, which is already Android's default.
 
-Bounded UsageStats session reconciliation is collected only while the process is alive and an active profile contains a shared-session policy. It must be measured on the reference device before activation in a daily-use profile. It is not presented as a guarantee that the process will remain alive in the background.
+Anti-Scroll also declares a notification-bearing `MonitoringForegroundService` with `START_STICKY` and the `specialUse` type. It is a process-lifetime aid, not a separate source of usage events, and is not a guarantee of uninterrupted execution.
 
-A foreground service is used only when continuous execution is necessary for a concrete user-visible feature and compliant with the targeted Android version.
+Foreground-service startup is centralized in `MonitoringForegroundServiceStarter`. Both `MainActivity.onStart()` and the `BOOT_COMPLETED` / `MY_PACKAGE_REPLACED` receiver attempt startup only when Usage Access is granted and the AccessibilityService is enabled (connected or not yet connected). Android can reject a foreground-service start; such failures are logged and must be validated on real devices. The existing periodic and immediate WorkManager reconciliation remains independent.
 
-When active, it must:
+The service displays a persistent notification, performs minimal work and introduces no watchdog, hidden relaunch or unconditional polling loop. Its `specialUse` type and Google Play eligibility need review before distribution. Physical-device testing must cover reboot, package replacement, task removal and manufacturer battery management.
 
-- display a clear persistent notification;
-- perform minimal work;
-- avoid aggressive polling;
-- stop when no longer required;
-- use the correct foreground-service type and permissions for the final target SDK.
-
-Adopting one requires a separate architecture review covering lifecycle ownership, battery cost, notification behavior, service type and background-start restrictions.
+Bounded UsageStats session reconciliation is collected only while the process is alive and an active profile contains a shared-session policy. It must be measured on the reference device before activation in a daily-use profile and cannot be treated as a real-time execution guarantee.
 
 ## Restart and process death
 
@@ -171,7 +165,7 @@ Later increments also reconstruct:
 - quota consumption;
 - latest session state.
 
-WorkManager is the default owner of persistent deferrable reconciliation. A boot receiver performs no heavy work and only enqueues or refreshes durable work within Android background-execution limits.
+WorkManager is the default owner of persistent deferrable reconciliation. The boot receiver enqueues or refreshes durable work and requests permission-aware foreground monitoring startup without heavy synchronous processing. Android background-start and manufacturer restrictions still apply.
 
 ## Time and time-zone changes
 
@@ -204,7 +198,8 @@ Before the first useful release, testing must include:
 - at least one physical reference device;
 - UsageStats comparison with Android system totals;
 - process kill and recreation;
-- device restart and user unlock;
+- device restart and user unlock, including conditional foreground-service restoration;
+- task removal from Recents and in-place package replacement;
 - permission revocation and restoration;
 - accessibility enable, disable and disconnect behavior;
 - proof that window content and accessibility nodes are not requested;

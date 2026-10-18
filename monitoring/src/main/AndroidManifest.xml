@@ -13,6 +13,7 @@
             android:name=".accessibility.AntiScrollAccessibilityService"
             android:exported="true"
             android:label="@string/accessibility_service_label"
+            android:stopWithTask="false"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

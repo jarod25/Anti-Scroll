@@ -27,6 +27,7 @@ This directory contains the technical documentation used as the development refe
 - [`ADR-011`](adr/011-usage-stats-session-reconciliation.md): reconcile monitored package exits with bounded UsageStats queries.
 - [`ADR-012`](adr/012-one-shot-session-deadline-scheduling.md): reevaluate active session limits through replaceable one-shot monotonic deadlines.
 - [`ADR-013`](adr/013-shared-session-state-persistence.md): persist active shared-session facts and restore them safely across process death and reboot.
+- [`ADR-015`](adr/015-monitoring-lifecycle-recovery.md): restore eligible foreground monitoring after reboot and package replacement.
 
 ## Documentation rules
 
